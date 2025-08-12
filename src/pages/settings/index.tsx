@@ -1,0 +1,137 @@
+import { useAppStore } from "@/lib/store";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/common/card";
+import { Trash2, Plus } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+
+export default function Settings() {
+  const { 
+    competitors, 
+    platforms, 
+    notifications, 
+    emailDigests, 
+    addCompetitor, 
+    removeCompetitor, 
+    togglePlatform, 
+    toggleNotifications, 
+    toggleEmailDigests 
+  } = useAppStore();
+  
+  const [newCompetitor, setNewCompetitor] = useState("");
+  
+  const handleAddCompetitor = () => {
+    if (newCompetitor.trim()) {
+      addCompetitor(newCompetitor.trim());
+      setNewCompetitor("");
+    }
+  };
+  
+  const availablePlatforms = ["Reddit", "Twitter", "G2", "HackerNews", "ProductHunt"];
+
+  return (
+    <div className="space-y-8 max-w-3xl mx-auto">
+      <Card
+        title="Competitor Keywords"
+        description="Add or remove competitors you want to track"
+      >
+        <div className="space-y-4">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Add new competitor name..."
+              value={newCompetitor}
+              onChange={(e) => setNewCompetitor(e.target.value)}
+              className="flex-1"
+            />
+            <Button onClick={handleAddCompetitor}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add
+            </Button>
+          </div>
+          
+          <div className="space-y-2 mt-4">
+            {competitors.length > 0 ? (
+              competitors.map((competitor) => (
+                <div
+                  key={competitor.id}
+                  className="flex items-center justify-between p-3 bg-muted/50 rounded-md"
+                >
+                  <span>{competitor.name}</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeCompetitor(competitor.id)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-6 text-muted-foreground">
+                No competitors added yet.
+              </div>
+            )}
+          </div>
+        </div>
+      </Card>
+      
+      <Card
+        title="Data Sources"
+        description="Select platforms to monitor for mentions"
+      >
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {availablePlatforms.map((platform) => (
+            <div
+              key={platform}
+              className="flex items-center space-x-2"
+            >
+              <Switch
+                id={`platform-${platform}`}
+                checked={platforms.includes(platform)}
+                onCheckedChange={() => togglePlatform(platform)}
+              />
+              <Label htmlFor={`platform-${platform}`}>{platform}</Label>
+            </div>
+          ))}
+        </div>
+      </Card>
+      
+      <Card
+        title="Notifications"
+        description="Configure how you receive updates"
+      >
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="notifications">Push Notifications</Label>
+              <div className="text-sm text-muted-foreground">
+                Receive real-time alerts for important changes
+              </div>
+            </div>
+            <Switch
+              id="notifications"
+              checked={notifications}
+              onCheckedChange={toggleNotifications}
+            />
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="email-digests">Weekly Email Digests</Label>
+              <div className="text-sm text-muted-foreground">
+                Get a summary of insights every week
+              </div>
+            </div>
+            <Switch
+              id="email-digests"
+              checked={emailDigests}
+              onCheckedChange={toggleEmailDigests}
+            />
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
