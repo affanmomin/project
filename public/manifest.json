@@ -1,0 +1,21 @@
+{
+  "name": "InsightMiner - Competitor Analysis SaaS",
+  "short_name": "InsightMiner",
+  "description": "AI-powered competitor analysis and market intelligence platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3B82F6",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "32x32",
+      "type": "image/x-icon"
+    }
+  ]
+}
