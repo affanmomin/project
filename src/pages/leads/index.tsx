@@ -10,7 +10,9 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Filter } from "lucide-react";
+import { ExternalLink, Filter, Search } from "lucide-react";
+import { apiClient } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/common/card";
 import {
@@ -33,6 +35,35 @@ export default function Leads() {
   const [searchQuery, setSearchQuery] = useState("");
   const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [isSearching, setIsSearching] = useState(false);
+  const { toast } = useToast();
+
+  const handleTestSearch = async () => {
+    setIsSearching(true);
+    try {
+      const response = await apiClient.post("/search", {
+        query: "abc",
+      });
+      toast({
+        title: "Search Successful",
+        description: "API call worked! Check console for details.",
+      });
+      console.log("Search Response:", response);
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "An error occurred during search";
+      toast({
+        title: "Search Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      console.error("Search Error:", error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   // Get unique platforms
   const platforms = [...new Set(leads.map((lead) => lead.platform))];
@@ -126,10 +157,21 @@ export default function Leads() {
           </div>
         </div>
 
-        <Button variant="outline" size="sm">
-          <Filter className="mr-2 h-4 w-4" />
-          Export CSV
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm">
+            <Filter className="mr-2 h-4 w-4" />
+            Export CSV
+          </Button>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={handleTestSearch}
+            disabled={isSearching}
+          >
+            <Search className="mr-2 h-4 w-4" />
+            {isSearching ? "Searching..." : "Test Search API"}
+          </Button>
+        </div>
       </div>
 
       <Card>
