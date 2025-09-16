@@ -1,17 +1,12 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { 
-  CompetitorData, 
-  Comment, 
-  Lead, 
-  ClusterPainPoint 
-} from '@/types';
-import { 
-  competitorsData, 
-  commentsData, 
-  leadsData, 
-  painPointsData 
-} from '@/data/mock-data';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { CompetitorData, Comment, Lead, ClusterPainPoint } from "@/types";
+import {
+  competitorsData,
+  commentsData,
+  leadsData,
+  painPointsData,
+} from "@/data/mock-data";
 
 interface AppState {
   competitors: CompetitorData[];
@@ -30,7 +25,10 @@ interface AppState {
   togglePlatform: (platform: string) => void;
   toggleNotifications: () => void;
   toggleEmailDigests: () => void;
-  updateLeadStatus: (id: string, status: string) => void;
+  updateLeadStatus: (
+    id: string,
+    status: "new" | "contacted" | "responded"
+  ) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -41,7 +39,7 @@ export const useAppStore = create<AppState>()(
       leads: leadsData,
       painPoints: painPointsData,
       selectedCompetitor: null,
-      platforms: ['Reddit', 'Twitter', 'G2'],
+      platforms: ["Reddit", "Twitter", "G2"],
       notifications: true,
       emailDigests: true,
 
@@ -67,8 +65,7 @@ export const useAppStore = create<AppState>()(
           competitors: state.competitors.filter((comp) => comp.id !== id),
         })),
 
-      selectCompetitor: (id: string | null) =>
-        set({ selectedCompetitor: id }),
+      selectCompetitor: (id: string | null) => set({ selectedCompetitor: id }),
 
       togglePlatform: (platform: string) =>
         set((state) => ({
@@ -83,7 +80,10 @@ export const useAppStore = create<AppState>()(
       toggleEmailDigests: () =>
         set((state) => ({ emailDigests: !state.emailDigests })),
 
-      updateLeadStatus: (id: string, status: string) =>
+      updateLeadStatus: (
+        id: string,
+        status: "new" | "contacted" | "responded"
+      ) =>
         set((state) => ({
           leads: state.leads.map((lead) =>
             lead.id === id ? { ...lead, status } : lead
@@ -91,7 +91,7 @@ export const useAppStore = create<AppState>()(
         })),
     }),
     {
-      name: 'insight-miner-storage',
+      name: "insight-miner-storage",
     }
   )
 );

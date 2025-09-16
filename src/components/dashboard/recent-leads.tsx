@@ -1,11 +1,11 @@
 import { Card } from "@/components/common/card";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,29 +16,29 @@ import { useMemo } from "react";
 
 export function RecentLeads() {
   const { leads } = useAppStore();
-  
+
   // Get the 5 most recent leads
   const recentLeads = useMemo(() => {
     return [...leads]
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 5);
   }, [leads]);
-  
+
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'new':
+      case "new":
         return <Badge variant="default">New</Badge>;
-      case 'contacted':
+      case "contacted":
         return <Badge variant="secondary">Contacted</Badge>;
-      case 'responded':
-        return <Badge variant="success">Responded</Badge>;
+      case "responded":
+        return <Badge variant="secondary">Responded</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
   };
 
   return (
-    <Card 
+    <Card
       title="Recent Switching Leads"
       description="Users expressing interest in switching"
     >
@@ -64,12 +64,7 @@ export function RecentLeads() {
               <TableCell>{formatDate(lead.date)}</TableCell>
               <TableCell>{getStatusBadge(lead.status)}</TableCell>
               <TableCell className="text-right">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  asChild
-                  className="h-8 w-8"
-                >
+                <Button variant="ghost" size="icon" asChild className="h-8 w-8">
                   <a href={lead.url} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="h-4 w-4" />
                     <span className="sr-only">Open source</span>
