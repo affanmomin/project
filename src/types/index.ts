@@ -79,7 +79,10 @@ export interface TrendDataPoint {
   label: string | null;
 }
 
-export interface TrendCardResponse extends CardResponse {
+export interface TrendCardResponse {
+  key: string;
+  title: string;
+  description: string;
   chartType: "line";
   data: TrendDataPoint[];
 }
