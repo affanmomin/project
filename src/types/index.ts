@@ -1,66 +1,149 @@
-export interface CompetitorData {
-  id: string;
-  name: string;
-  totalMentions: number;
-  negativeSentiment: number;
-  trendingComplaints: string[];
-  mentionsOverTime: MentionPoint[];
-  alternativesMentioned: AlternativeMention[];
+// ... (existing types)
+
+export interface MetricDataPoint {
+  current_value?: string;
+  previous_value?: string;
+  current_pct?: string;
+  previous_pct?: string;
+  pct_change?: string | null;
 }
 
+export interface ComplaintDataPoint {
+  name: string | null;
+  label: string;
+  value: string;
+}
+
+export interface AlternativeDataPoint {
+  alternative: string | null;
+  mentions: string;
+}
+
+export interface LeadDataPoint {
+  platform: string;
+  username: string;
+  excerpt: string;
+  reason: string;
+  date: string;
+  status: string | null;
+}
+
+export interface CardResponse {
+  key: string;
+  title: string;
+  description: string;
+  chartType: "number" | "bar" | "table" | "line";
+  data: CardDataPoint[];
+}
+
+export interface MetricCardResponse extends CardResponse {
+  chartType: "number";
+  data: MetricDataPoint[];
+}
+
+export interface ComplaintCardResponse extends CardResponse {
+  chartType: "bar";
+  data: ComplaintDataPoint[];
+}
+
+export interface AlternativeCardResponse extends CardResponse {
+  chartType: "bar";
+  data: AlternativeDataPoint[];
+}
+
+export interface LeadCardResponse extends CardResponse {
+  chartType: "table";
+  data: LeadDataPoint[];
+}
+
+export type CardDataPoint =
+  | MetricDataPoint
+  | ComplaintDataPoint
+  | AlternativeDataPoint
+  | LeadDataPoint;
+
+export interface CardsApiResponse {
+  success: boolean;
+  data: CardResponse[];
+}
+
+export interface DateRangeParams {
+  start_date?: string;
+  end_date?: string;
+}
+
+// Time-series trend point (e.g., complaint-trend)
+export interface TrendDataPoint {
+  date: string;
+  value: string;
+  label: string | null;
+}
+
+export interface TrendCardResponse extends CardResponse {
+  chartType: "line";
+  data: TrendDataPoint[];
+}
+
+// Generic line chart point used by SentimentChart
 export interface MentionPoint {
   date: string;
   value: number;
-  sentiment: number;
+  sentiment: number; // 0-100; when unavailable, provide 0
 }
 
-export interface AlternativeMention {
+// Competitor API types
+export interface CompetitorDataPoint {
+  id: string;
   name: string;
-  count: number;
+  slug: string;
+  created_at: string;
+  user_id: string;
+  total_sources: string;
+  enabled_sources: string;
+  disabled_sources: string;
+  last_scraped_at: string;
+  total_mentions: string;
+  positive_mentions: string;
+  negative_mentions: string;
+  neutral_mentions: string;
+  total_leads: string;
+  total_complaint_clusters: string;
+  total_alternatives: string;
 }
 
-export interface Comment {
-  id: string;
-  competitorId: string;
-  platform: 'Reddit' | 'Twitter' | 'G2';
-  username: string;
-  content: string;
-  date: string;
-  sentiment: number;
-  url: string;
-}
-
-export interface Lead {
-  id: string;
-  competitorId: string;
-  platform: string;
-  username: string;
-  content: string;
-  issue: string;
-  date: string;
-  status: 'new' | 'contacted' | 'responded';
-  url: string;
-}
-
-export interface ClusterPainPoint {
-  id: string;
-  competitorId: string;
-  label: string;
-  count: number;
-  examples: string[];
-}
-
-export interface CompetitorOverview {
-  sentimentScore: number;
-  totalMentions: number;
-  totalNegativeMentions: number;
-  trendingComplaints: string[];
-  mentionsOverTime: MentionPoint[];
-}
-
-export interface SummaryMetric {
+export interface CompetitorCardResponse {
+  key: string;
   title: string;
-  value: string | number;
-  change?: number;
-  icon: React.ReactNode;
+  description: string;
+  chartType: "table";
+  data: CompetitorDataPoint[];
+}
+
+// Lead API types
+export interface LeadDataPoint {
+  id: string;
+  analyzed_post_id: string | null;
+  username: string;
+  platform: string;
+  excerpt: string;
+  reason: string;
+  status: string | null;
+  created_at: string;
+  user_id: string;
+  sentiment: string | null;
+  cluster: string | null;
+  switch_intent: string | null;
+  summary: string | null;
+  alternatives: string | null;
+  analyzed_at: string | null;
+  competitor_name: string | null;
+  competitor_slug: string | null;
+}
+
+export interface LeadCardResponse {
+  key: string;
+  title: string;
+  description: string;
+  chartType: "table";
+  data: LeadDataPoint[];
 }

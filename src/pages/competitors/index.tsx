@@ -1,29 +1,70 @@
-import { useAppStore } from "@/lib/store";
+import { apiClient } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { formatNumber } from "@/lib/utils";
-import { ClusterTag } from "@/components/common/cluster-tag";
 import { Link } from "react-router-dom";
 import { ChevronRight, Plus } from "lucide-react";
 import { Card } from "@/components/common/card";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { CompetitorDataPoint } from "@/types";
 
 export default function Competitors() {
-  const { competitors } = useAppStore();
+  const [competitors, setCompetitors] = useState<CompetitorDataPoint[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCompetitors = async () => {
+      try {
+        setIsLoading(true);
+        const response = await apiClient.getCompetitors();
+        const competitorsData = response.data.find(
+          (card) => card.key === "all-competitors"
+        );
+        if (competitorsData?.data) {
+          setCompetitors(competitorsData.data as CompetitorDataPoint[]);
+        }
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch competitors"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCompetitors();
+  }, []);
+
   // Filter competitors based on search query
-  const filteredCompetitors = competitors.filter(competitor => 
+  const filteredCompetitors = competitors.filter((competitor) =>
     competitor.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  if (error) {
+    return (
+      <div className="flex h-[200px] items-center justify-center">
+        <p className="text-destructive">Error: {error}</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[200px] items-center justify-center">
+        <p>Loading competitors...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -43,7 +84,7 @@ export default function Competitors() {
           </Link>
         </Button>
       </div>
-      
+
       <Card>
         <Table>
           <TableHeader>
@@ -51,7 +92,9 @@ export default function Competitors() {
               <TableHead>Name</TableHead>
               <TableHead>Total Mentions</TableHead>
               <TableHead>Negative Sentiment</TableHead>
-              <TableHead className="w-full">Trending Complaints</TableHead>
+              <TableHead>Total Leads</TableHead>
+              <TableHead>Complaint Clusters</TableHead>
+              <TableHead>Alternatives</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -63,35 +106,31 @@ export default function Competitors() {
                     {competitor.name}
                   </TableCell>
                   <TableCell>
-                    {formatNumber(competitor.totalMentions)}
+                    {formatNumber(parseInt(competitor.total_mentions))}
                   </TableCell>
                   <TableCell>
-                    {(competitor.negativeSentiment * 100).toFixed(0)}%
+                    {competitor.negative_mentions && competitor.total_mentions
+                      ? (
+                          (parseInt(competitor.negative_mentions) /
+                            parseInt(competitor.total_mentions)) *
+                          100
+                        ).toFixed(0)
+                      : 0}
+                    %
                   </TableCell>
                   <TableCell>
-                    <div className="flex flex-wrap gap-2">
-                      {competitor.trendingComplaints.map((complaint, index) => (
-                        <ClusterTag
-                          key={index}
-                          label={complaint}
-                          size="sm"
-                          variant={
-                            index === 0
-                              ? "destructive"
-                              : index === 1
-                              ? "warning"
-                              : "default"
-                          }
-                        />
-                      ))}
-                    </div>
+                    {formatNumber(parseInt(competitor.total_leads))}
+                  </TableCell>
+                  <TableCell>
+                    {formatNumber(
+                      parseInt(competitor.total_complaint_clusters)
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {formatNumber(parseInt(competitor.total_alternatives))}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      asChild
-                    >
+                    <Button variant="ghost" size="sm" asChild>
                       <Link to={`/competitors/${competitor.id}`}>
                         View Insights
                         <ChevronRight className="ml-1 h-4 w-4" />
@@ -102,7 +141,7 @@ export default function Competitors() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-6">
+                <TableCell colSpan={7} className="text-center py-6">
                   No competitors found.
                 </TableCell>
               </TableRow>

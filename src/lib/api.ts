@@ -4,6 +4,7 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
+import type { CardsApiResponse, DateRangeParams } from "@/types";
 
 // Types
 export interface ApiResponse<T = any> {
@@ -76,6 +77,17 @@ api.interceptors.response.use(
 );
 
 // API methods
+export const DASHBOARD_QUERIES = [
+  "total-mentions",
+  "negative-sentiment-percentage",
+  "recurring-complaints",
+  "alternatives-mentioned",
+  "top-complaints",
+  "top-alternatives",
+  "recent-switching-leads",
+  "complaint-trend",
+] as const;
+
 export const apiClient = {
   get: <T>(url: string, config = {}) =>
     api.get<T>(url, config).then((response) => response.data),
@@ -91,6 +103,31 @@ export const apiClient = {
 
   patch: <T>(url: string, data = {}, config = {}) =>
     api.patch<T>(url, data, config).then((response) => response.data),
+
+  // Dashboard cards data
+  getDashboardCards: (dateRange?: DateRangeParams) => {
+    return apiClient.post<CardsApiResponse>("/cards", {
+      queries: DASHBOARD_QUERIES,
+      user_id: "4wCtOfZuvMHPmNVgIUMCDxL6BbE5sjIB",
+      ...dateRange,
+    });
+  },
+
+  // Competitors data
+  getCompetitors: () => {
+    return apiClient.post<CardsApiResponse>("/cards", {
+      queries: ["all-competitors"],
+      user_id: "4wCtOfZuvMHPmNVgIUMCDxL6BbE5sjIB",
+    });
+  },
+
+  // Leads data
+  getLeads: () => {
+    return apiClient.post<CardsApiResponse>("/cards", {
+      queries: ["all-leads"],
+      user_id: "4wCtOfZuvMHPmNVgIUMCDxL6BbE5sjIB",
+    });
+  },
 };
 
 export default api;

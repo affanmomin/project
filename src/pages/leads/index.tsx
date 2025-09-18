@@ -1,5 +1,4 @@
-import { useAppStore } from "@/lib/store";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -29,14 +28,38 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { formatDate } from "@/lib/utils";
+import { LeadDataPoint } from "@/types";
 
 export default function Leads() {
-  const { leads, competitors, updateLeadStatus } = useAppStore();
+  const [leads, setLeads] = useState<LeadDataPoint[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [platformFilter, setPlatformFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isSearching, setIsSearching] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchLeads = async () => {
+      try {
+        setIsLoading(true);
+        const response = await apiClient.getLeads();
+        const leadsData = response.data.find(
+          (card) => card.key === "all-leads"
+        );
+        if (leadsData?.data) {
+          setLeads(leadsData.data as LeadDataPoint[]);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch leads");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchLeads();
+  }, []);
 
   const handleTestSearch = async () => {
     setIsSearching(true);
@@ -72,9 +95,9 @@ export default function Leads() {
   const filteredLeads = leads.filter((lead) => {
     // Text search
     const matchesSearch =
-      lead.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      lead.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
       lead.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.issue.toLowerCase().includes(searchQuery.toLowerCase());
+      lead.reason.toLowerCase().includes(searchQuery.toLowerCase());
 
     // Platform filter
     const matchesPlatform =
@@ -87,33 +110,49 @@ export default function Leads() {
     return matchesSearch && matchesPlatform && matchesStatus;
   });
 
-  // Get competitor name by ID
-  const getCompetitorName = (id: string) => {
-    const competitor = competitors.find((c) => c.id === id);
-    return competitor ? competitor.name : "Unknown";
-  };
-
   // Get status badge
-  const getStatusBadge = (status: string) => {
-    switch (status) {
+  const getStatusBadge = (status: string | null) => {
+    switch (status?.toLowerCase()) {
       case "new":
         return <Badge variant="default">New</Badge>;
       case "contacted":
         return <Badge variant="secondary">Contacted</Badge>;
       case "responded":
         return <Badge variant="secondary">Responded</Badge>;
+      case "ignored":
+        return <Badge variant="outline">Ignored</Badge>;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <Badge variant="outline">New</Badge>;
     }
   };
 
   // Handle status change
   const handleStatusChange = (
     leadId: string,
-    newStatus: "new" | "contacted" | "responded"
+    newStatus: "new" | "contacted" | "responded" | "ignored"
   ) => {
-    updateLeadStatus(leadId, newStatus);
+    setLeads((prevLeads) =>
+      prevLeads.map((lead) =>
+        lead.id === leadId ? { ...lead, status: newStatus } : lead
+      )
+    );
   };
+
+  if (error) {
+    return (
+      <div className="flex h-[200px] items-center justify-center">
+        <p className="text-destructive">Error: {error}</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex h-[200px] items-center justify-center">
+        <p>Loading leads...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -152,6 +191,7 @@ export default function Leads() {
                 <SelectItem value="new">New</SelectItem>
                 <SelectItem value="contacted">Contacted</SelectItem>
                 <SelectItem value="responded">Responded</SelectItem>
+                <SelectItem value="ignored">Ignored</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -181,7 +221,7 @@ export default function Leads() {
               <TableHead>Platform</TableHead>
               <TableHead>Username</TableHead>
               <TableHead>Competitor</TableHead>
-              <TableHead>Issue</TableHead>
+              <TableHead>Reason</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -195,11 +235,11 @@ export default function Leads() {
                     <Badge variant="outline">{lead.platform}</Badge>
                   </TableCell>
                   <TableCell className="font-medium">{lead.username}</TableCell>
-                  <TableCell>{getCompetitorName(lead.competitorId)}</TableCell>
+                  <TableCell>{lead.competitor_name || "Unknown"}</TableCell>
                   <TableCell>
-                    <Badge variant="secondary">{lead.issue}</Badge>
+                    <Badge variant="secondary">{lead.reason}</Badge>
                   </TableCell>
-                  <TableCell>{formatDate(lead.date)}</TableCell>
+                  <TableCell>{formatDate(lead.created_at)}</TableCell>
                   <TableCell>{getStatusBadge(lead.status)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end space-x-2">
@@ -229,15 +269,18 @@ export default function Leads() {
                           >
                             Responded
                           </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleStatusChange(lead.id, "ignored")
+                            }
+                          >
+                            Ignored
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
 
                       <Button variant="ghost" size="icon" asChild>
-                        <a
-                          href={lead.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
+                        <a href="#" target="_blank" rel="noopener noreferrer">
                           <ExternalLink className="h-4 w-4" />
                           <span className="sr-only">Open source</span>
                         </a>

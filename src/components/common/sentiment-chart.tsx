@@ -22,7 +22,7 @@ interface SentimentChartProps {
 
 export function SentimentChart({
   data,
-  title = "Sentiment Over Time",
+  title = "Complaint Trend",
   description,
   className,
   height = 300,
@@ -30,7 +30,6 @@ export function SentimentChart({
   const formattedData = data.map((item) => ({
     ...item,
     date: format(parseISO(item.date), "MMM dd"),
-    sentiment: Number((item.sentiment * 100).toFixed(0)),
   }));
 
   return (
@@ -47,51 +46,61 @@ export function SentimentChart({
         >
           <defs>
             <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0.1} />
+              <stop
+                offset="5%"
+                stopColor="hsl(var(--chart-1))"
+                stopOpacity={0.8}
+              />
+              <stop
+                offset="95%"
+                stopColor="hsl(var(--chart-1))"
+                stopOpacity={0.1}
+              />
             </linearGradient>
             <linearGradient id="colorSentiment" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="hsl(var(--chart-4))" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="hsl(var(--chart-4))" stopOpacity={0.1} />
+              <stop
+                offset="5%"
+                stopColor="hsl(var(--chart-4))"
+                stopOpacity={0.8}
+              />
+              <stop
+                offset="95%"
+                stopColor="hsl(var(--chart-4))"
+                stopOpacity={0.1}
+              />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-          <XAxis 
-            dataKey="date" 
-            className="text-xs" 
-            tick={{ fill: 'hsl(var(--muted-foreground))' }}
-            tickLine={{ stroke: 'hsl(var(--muted))' }}
-            axisLine={{ stroke: 'hsl(var(--muted))' }}
+          <XAxis
+            dataKey="date"
+            className="text-xs"
+            tick={{ fill: "hsl(var(--muted-foreground))" }}
+            tickLine={{ stroke: "hsl(var(--muted))" }}
+            axisLine={{ stroke: "hsl(var(--muted))" }}
           />
-          <YAxis 
-            className="text-xs" 
-            tick={{ fill: 'hsl(var(--muted-foreground))' }}
-            tickLine={{ stroke: 'hsl(var(--muted))' }}
-            axisLine={{ stroke: 'hsl(var(--muted))' }}
+          <YAxis
+            className="text-xs"
+            tick={{ fill: "hsl(var(--muted-foreground))" }}
+            tickLine={{ stroke: "hsl(var(--muted))" }}
+            axisLine={{ stroke: "hsl(var(--muted))" }}
           />
-          <Tooltip 
-            contentStyle={{ 
-              backgroundColor: 'hsl(var(--card))',
-              borderColor: 'hsl(var(--border))',
-              color: 'hsl(var(--card-foreground))'
+          <Tooltip
+            contentStyle={{
+              backgroundColor: "hsl(var(--card))",
+              borderColor: "hsl(var(--border))",
+              color: "hsl(var(--card-foreground))",
             }}
+            labelFormatter={(label) => `Date: ${label}`}
+            formatter={(value: any) => [value, "Complaints"]}
           />
           <Legend />
           <Area
             type="monotone"
             dataKey="value"
-            name="Mentions"
+            name="Complaints"
             stroke="hsl(var(--chart-1))"
             fillOpacity={1}
             fill="url(#colorValue)"
-          />
-          <Area
-            type="monotone"
-            dataKey="sentiment"
-            name="Sentiment %"
-            stroke="hsl(var(--chart-4))"
-            fillOpacity={1}
-            fill="url(#colorSentiment)"
           />
         </AreaChart>
       </ResponsiveContainer>

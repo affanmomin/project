@@ -1,22 +1,28 @@
 import { Card } from "@/components/common/card";
-import { useAppStore } from "@/lib/store";
-import { useMemo } from "react";
 import { ClusterTag } from "@/components/common/cluster-tag";
 import { cn } from "@/lib/utils";
+import { ComplaintCardResponse } from "@/types";
 
-export function TopComplaints() {
-  const { painPoints } = useAppStore();
+interface TopComplaintsProps {
+  data?: ComplaintCardResponse;
+}
 
-  // Get top 5 pain points across all competitors
-  const topPainPoints = useMemo(() => {
-    const sorted = [...painPoints].sort((a, b) => b.count - a.count);
-    return sorted.slice(0, 5);
-  }, [painPoints]);
+export function TopComplaints({ data }: TopComplaintsProps) {
+  if (!data?.data) {
+    return null;
+  }
+
+  // Filter out null names and sort by value
+  const complaints = data.data
+    .filter((item) => item.name !== null)
+    .map((item) => ({
+      label: item.name!,
+      value: parseInt(item.value || "0", 10),
+    }))
+    .sort((a, b) => b.value - a.value);
 
   // Find max count for relative scaling
-  const maxCount = useMemo(() => {
-    return topPainPoints.length > 0 ? topPainPoints[0].count : 0;
-  }, [topPainPoints]);
+  const maxCount = complaints.length > 0 ? complaints[0].value : 0;
 
   // Determine variant based on index/position
   const getVariant = (index: number) => {
@@ -26,32 +32,26 @@ export function TopComplaints() {
       "default",
       "secondary",
       "success",
-    ];
-    return variants[index % variants.length] as
-      | "destructive"
-      | "warning"
-      | "default"
-      | "secondary"
-      | "success";
+    ] as const;
+    return variants[index % variants.length];
   };
 
   return (
     <Card
-      title="Top Complaints"
-      description="Most frequent pain points mentioned"
+      title={data.title}
+      description={data.description}
       contentClassName="space-y-5"
     >
-      {topPainPoints.map((painPoint, index) => (
-        <div key={painPoint.id} className="space-y-1.5">
+      {complaints.map((complaint, index) => (
+        <div key={complaint.label} className="space-y-1.5">
           <div className="flex items-center justify-between">
             <ClusterTag
-              label={painPoint.label}
-              count={painPoint.count}
-              examples={painPoint.examples}
+              label={complaint.label}
+              count={complaint.value}
               variant={getVariant(index)}
             />
             <span className="text-sm text-muted-foreground">
-              {painPoint.count} mentions
+              {complaint.value} mentions
             </span>
           </div>
           <div className="relative h-2 w-full overflow-hidden rounded-full bg-muted">
@@ -64,7 +64,7 @@ export function TopComplaints() {
                 index === 3 ? "bg-secondary" : "",
                 index === 4 ? "bg-green-500" : "bg-primary"
               )}
-              style={{ width: `${(painPoint.count / maxCount) * 100}%` }}
+              style={{ width: `${(complaint.value / maxCount) * 100}%` }}
             />
           </div>
         </div>

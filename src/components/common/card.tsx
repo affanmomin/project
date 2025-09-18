@@ -1,4 +1,4 @@
-import { 
+import {
   Card as UICard,
   CardContent,
   CardDescription,
@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { PropsWithChildren, ReactNode } from "react";
 
 interface CardProps extends PropsWithChildren {
-  title?: string;
+  title?: ReactNode;
   description?: string;
   className?: string;
   headerClassName?: string;
@@ -37,9 +37,7 @@ export function Card({
           {description && <CardDescription>{description}</CardDescription>}
         </CardHeader>
       )}
-      <CardContent className={cn("", contentClassName)}>
-        {children}
-      </CardContent>
+      <CardContent className={cn("", contentClassName)}>{children}</CardContent>
       {footer && (
         <CardFooter className={cn("flex justify-between", footerClassName)}>
           {footer}

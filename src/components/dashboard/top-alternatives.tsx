@@ -1,35 +1,26 @@
 import { Card } from "@/components/common/card";
-import { useAppStore } from "@/lib/store";
-import { AlternativeMention } from "@/types";
-import { useMemo } from "react";
 import { Trophy, Medal, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AlternativeCardResponse } from "@/types";
 
-export function TopAlternatives() {
-  const { competitors } = useAppStore();
-  
-  // Combine and count all alternatives mentioned
-  const alternatives = useMemo(() => {
-    const allAlternatives: Record<string, number> = {};
-    
-    competitors.forEach((competitor) => {
-      competitor.alternativesMentioned.forEach((alt) => {
-        if (allAlternatives[alt.name]) {
-          allAlternatives[alt.name] += alt.count;
-        } else {
-          allAlternatives[alt.name] = alt.count;
-        }
-      });
-    });
-    
-    const sortedAlternatives: AlternativeMention[] = Object.entries(allAlternatives)
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
-    
-    return sortedAlternatives;
-  }, [competitors]);
-  
+interface TopAlternativesProps {
+  data?: AlternativeCardResponse;
+}
+
+export function TopAlternatives({ data }: TopAlternativesProps) {
+  if (!data?.data) {
+    return null;
+  }
+
+  // Filter out null alternatives and sort by mentions
+  const alternatives = data.data
+    .filter((item) => item.alternative !== null)
+    .map((item) => ({
+      name: item.alternative!,
+      count: parseInt(item.mentions || "0", 10),
+    }))
+    .sort((a, b) => b.count - a.count);
+
   const getIcon = (index: number) => {
     switch (index) {
       case 0:
@@ -44,13 +35,13 @@ export function TopAlternatives() {
   };
 
   return (
-    <Card 
-      title="Top Alternatives"
-      description="Most mentioned competitor alternatives"
+    <Card
+      title={data.title}
+      description={data.description}
       contentClassName="space-y-4"
     >
       {alternatives.map((alternative, index) => (
-        <div 
+        <div
           key={alternative.name}
           className={cn(
             "flex items-center justify-between p-3 rounded-md",
@@ -62,12 +53,14 @@ export function TopAlternatives() {
         >
           <div className="flex items-center gap-x-3">
             {getIcon(index)}
-            <span className={cn(
-              "font-medium",
-              index === 0 ? "text-warning" : "",
-              index === 1 ? "text-chart-3" : "",
-              index === 2 ? "text-chart-2" : ""
-            )}>
+            <span
+              className={cn(
+                "font-medium",
+                index === 0 ? "text-warning" : "",
+                index === 1 ? "text-chart-3" : "",
+                index === 2 ? "text-chart-2" : ""
+              )}
+            >
               {alternative.name}
             </span>
           </div>
