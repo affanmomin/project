@@ -11,8 +11,22 @@ export interface SignInData {
   password: string;
 }
 
+export interface AuthResponse {
+  redirect: boolean;
+  token: string;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    image: string | null;
+    emailVerified: boolean;
+    createdAt: string;
+    updatedAt: string;
+  };
+}
+
 export const authService = {
-  async signUp(data: SignUpData) {
+  async signUp(data: SignUpData): Promise<AuthResponse> {
     try {
       const signUpPayload: { email: string; password: string; name?: string } = {
         email: data.email,
@@ -24,20 +38,20 @@ export const authService = {
       }
       
       const result = await authClient.signUp.email(signUpPayload);
-      return result;
+      return result as AuthResponse;
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Sign up failed";
       throw new Error(message);
     }
   },
 
-  async signIn(data: SignInData) {
+  async signIn(data: SignInData): Promise<AuthResponse> {
     try {
       const result = await authClient.signIn.email({
         email: data.email,
         password: data.password,
       });
-      return result;
+      return result as AuthResponse;
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Sign in failed";
       throw new Error(message);

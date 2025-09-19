@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { authService, type SignUpData } from "../../services/auth.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +17,9 @@ export function SignupForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -31,12 +36,21 @@ export function SignupForm() {
     setSuccess("");
 
     try {
-      await authService.signUp(formData);
-      setSuccess("Account created successfully! Please check your email for verification.");
-      // Optionally redirect to login page
-      setTimeout(() => {
-        window.location.href = "/login";
-      }, 2000);
+      const result = await authService.signUp(formData);
+      
+      // If the signup response includes login data, use it to log the user in
+      if (result && result.token && result.user) {
+        login(result);
+        setSuccess("Account created successfully! Redirecting to dashboard...");
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 1500);
+      } else {
+        setSuccess("Account created successfully! Please check your email for verification.");
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
+      }
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Sign up failed");
     } finally {

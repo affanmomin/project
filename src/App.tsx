@@ -14,14 +14,14 @@ import LoginPage from './pages/login';
 function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="insightminer-theme">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
-          
-          {/* Protected routes with auth context and layout */}
-          <Route path="/*" element={
-            <AuthProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            
+            {/* Protected routes with layout */}
+            <Route path="/*" element={
               <AppLayout>
                 <Routes>
                   <Route path="/" element={<Dashboard />} />
@@ -33,11 +33,11 @@ function App() {
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </AppLayout>
-            </AuthProvider>
-          } />
-        </Routes>
-        <Toaster />
-      </BrowserRouter>
+            } />
+          </Routes>
+          <Toaster />
+        </BrowserRouter>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

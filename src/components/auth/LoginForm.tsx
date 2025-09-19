@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { authService, type SignInData } from "../../services/auth.service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +15,9 @@ export function LoginForm() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -28,9 +33,13 @@ export function LoginForm() {
     setError("");
 
     try {
-      await authService.signIn(formData);
-      // Redirect to dashboard after successful login
-      window.location.href = "/dashboard";
+      const result = await authService.signIn(formData);
+      
+      // Use the login function from AuthContext to save the auth data
+      login(result);
+      
+      // Navigate to dashboard after successful login
+      navigate("/dashboard");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "Login failed");
     } finally {

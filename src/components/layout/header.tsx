@@ -17,16 +17,20 @@ import { authService } from '@/services/auth.service';
 
 export default function Header() {
   const { theme, setTheme } = useTheme();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
   const pageTitle = getPageTitle(location.pathname);
 
   const handleLogout = async () => {
     try {
       await authService.signOut();
+      logout(); // Clear the context state
       window.location.href = "/login";
     } catch (error) {
       console.error("Logout error:", error);
+      // Even if the API call fails, clear local state
+      logout();
+      window.location.href = "/login";
     }
   };
 
