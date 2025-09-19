@@ -137,7 +137,24 @@ export const apiClient = {
         user_id: userId || "4wCtOfZuvMHPmNVgIUMCDxL6BbE5sjIB",
       }
     });
-  }
+  },
+    getUserCompetitors: (userId?: string) => {
+    return apiClient.get<{
+      success: boolean;
+      data: Array<{
+        id: string;
+        name: string;
+        slug: string;
+        created_at: string;
+        user_id: string;
+      }>;
+      pagination: {
+        limit: number;
+        offset: number;
+        count: number;
+      };
+    }>(`/api/competitors?user_id=${userId || "4wCtOfZuvMHPmNVgIUMCDxL6BbE5sjIB"}`);
+  },
 };
 
 export default api;
