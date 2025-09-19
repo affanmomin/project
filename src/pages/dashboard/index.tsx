@@ -14,11 +14,14 @@ import type {
   TrendCardResponse,
   MentionPoint,
 } from "@/types";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState<CardResponse[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const user = useAuth();
+  console.log("Authenticated user:", user);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -57,6 +60,8 @@ export default function Dashboard() {
       </div>
     );
   }
+
+
 
   // Helper function to find card data by key with type assertion
   const getCardData = <T extends CardResponse>(
