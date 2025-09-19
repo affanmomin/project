@@ -6,6 +6,9 @@ import { Card } from "@/components/common/card";
 import { Trash2, Plus } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { apiClient } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Settings() {
   const { 
@@ -20,12 +23,62 @@ export default function Settings() {
     toggleEmailDigests 
   } = useAppStore();
   
+  const { user } = useAuth();
   const [newCompetitor, setNewCompetitor] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
   
-  const handleAddCompetitor = () => {
-    if (newCompetitor.trim()) {
-      addCompetitor(newCompetitor.trim());
+  // Debug log to see current competitors
+  console.log("Current competitors:", competitors);
+  
+  const handleAddCompetitor = async () => {
+    if (!newCompetitor.trim()) return;
+    
+    setIsLoading(true);
+    try {
+      const response = await apiClient.addCompetitor(newCompetitor.trim(), user?.id);
+      
+      console.log("API Response:", response); // Debug log
+      console.log("Adding competitor to store:", response.name); // Debug log
+      
+      // Update the local store with the response from the API
+      addCompetitor({ id: response.data.id, name: response.data.name });
       setNewCompetitor("");
+      
+      toast({
+        title: "Success",
+        description: "Competitor added successfully",
+      });
+    } catch (error) {
+      console.error("Error adding competitor:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add competitor. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRemoveCompetitor = async (competitorId: string) => {
+    try {
+      await apiClient.removeCompetitor(competitorId, user?.id);
+      
+      // Remove from local store
+      removeCompetitor(competitorId);
+      
+      toast({
+        title: "Success",
+        description: "Competitor removed successfully",
+      });
+    } catch (error) {
+      console.error("Error removing competitor:", error);
+      toast({
+        title: "Error",
+        description: "Failed to remove competitor. Please try again.",
+        variant: "destructive",
+      });
     }
   };
   
@@ -44,10 +97,18 @@ export default function Settings() {
               value={newCompetitor}
               onChange={(e) => setNewCompetitor(e.target.value)}
               className="flex-1"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !isLoading) {
+                  handleAddCompetitor();
+                }
+              }}
             />
-            <Button onClick={handleAddCompetitor}>
+            <Button 
+              onClick={handleAddCompetitor}
+              disabled={isLoading || !newCompetitor.trim()}
+            >
               <Plus className="h-4 w-4 mr-2" />
-              Add
+              {isLoading ? "Adding..." : "Add"}
             </Button>
           </div>
           
@@ -62,7 +123,7 @@ export default function Settings() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => removeCompetitor(competitor.id)}
+                    onClick={() => handleRemoveCompetitor(competitor.id)}
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
