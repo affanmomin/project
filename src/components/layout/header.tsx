@@ -3,19 +3,32 @@ import {
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
-  DropdownMenuTrigger 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import { useTheme } from '@/components/providers/theme-provider';
+import { useAuth } from '@/contexts/AuthContext';
 import { Bell, Moon, Search, Sun, User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { getPageTitle } from '@/lib/utils';
+import { authService } from '@/services/auth.service';
 
 export default function Header() {
   const { theme, setTheme } = useTheme();
+  const { user } = useAuth();
   const location = useLocation();
   const pageTitle = getPageTitle(location.pathname);
+
+  const handleLogout = async () => {
+    try {
+      await authService.signOut();
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
 
   return (
     <header className="border-b px-6 py-3 h-16 flex items-center justify-between bg-background">
@@ -68,9 +81,20 @@ export default function Header() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            {user && (
+              <>
+                <DropdownMenuItem disabled>
+                  {user.email}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
             <DropdownMenuItem>Profile</DropdownMenuItem>
             <DropdownMenuItem>Settings</DropdownMenuItem>
-            <DropdownMenuItem>Log out</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout}>
+              Log out
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

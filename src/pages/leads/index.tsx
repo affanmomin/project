@@ -64,14 +64,13 @@ export default function Leads() {
   const handleTestSearch = async () => {
     setIsSearching(true);
     try {
-      const response = await apiClient.post("/search", {
+      await apiClient.post("/search", {
         query: "abc",
       });
       toast({
         title: "Search Successful",
-        description: "API call worked! Check console for details.",
+        description: "API call worked! Search completed successfully.",
       });
-      console.log("Search Response:", response);
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error

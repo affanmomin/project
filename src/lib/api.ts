@@ -25,18 +25,14 @@ const api: AxiosInstance = axios.create({
     "Content-Type": "application/json",
     Accept: "application/json",
   },
+  withCredentials: true, // Important for Better Auth cookies
 });
 
 // Request interceptor
 api.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    // Get token from localStorage or your auth store
-    const token = localStorage.getItem("token");
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
+  async (config: InternalAxiosRequestConfig) => {
+    // Better Auth handles authentication via cookies automatically
+    // No need to manually add Authorization header
     return config;
   },
   (error: AxiosError) => {
@@ -50,12 +46,9 @@ api.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
-    const originalRequest = error.config;
-
     // Handle 401 Unauthorized errors
     if (error.response?.status === 401) {
-      // Handle token refresh or logout logic here
-      localStorage.removeItem("token");
+      // Redirect to login page
       window.location.href = "/login";
       return Promise.reject(error);
     }
