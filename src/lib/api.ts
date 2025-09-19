@@ -121,6 +121,23 @@ export const apiClient = {
       user_id: "4wCtOfZuvMHPmNVgIUMCDxL6BbE5sjIB",
     });
   },
+
+  addCompetitor: (name: string, userId?: string) => {
+    return apiClient.post<{
+      data: any; id: string; name: string 
+}>("/api/competitors", {
+      name,
+      user_id: userId || "4wCtOfZuvMHPmNVgIUMCDxL6BbE5sjIB", // Fallback to default user_id
+    });
+  },
+
+  removeCompetitor: (competitorId: string, userId?: string) => {
+    return apiClient.delete<{ success: boolean }>(`/api/competitors/${competitorId}`, {
+      data: {
+        user_id: userId || "4wCtOfZuvMHPmNVgIUMCDxL6BbE5sjIB",
+      }
+    });
+  }
 };
 
 export default api;

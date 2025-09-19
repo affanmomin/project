@@ -19,7 +19,7 @@ interface AppState {
   emailDigests: boolean;
 
   // Actions
-  addCompetitor: (name: string) => void;
+  addCompetitor: (competitor: { id: string; name: string }) => void;
   removeCompetitor: (id: string) => void;
   selectCompetitor: (id: string | null) => void;
   togglePlatform: (platform: string) => void;
@@ -44,13 +44,13 @@ export const useAppStore = create<AppState>()(
       emailDigests: true,
 
       // Actions
-      addCompetitor: (name: string) =>
+      addCompetitor: (competitor: { id: string; name: string }) =>
         set((state) => ({
           competitors: [
             ...state.competitors,
             {
-              id: Date.now().toString(),
-              name,
+              id: competitor.id,
+              name: competitor.name,
               totalMentions: 0,
               negativeSentiment: 0,
               trendingComplaints: [],
