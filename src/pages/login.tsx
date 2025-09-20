@@ -66,8 +66,8 @@ export default function LoginPage() {
     <AuthLayout
       heading="Welcome back"
       subheading="Sign in to your command center"
-      leftTitle="Marketing intelligence for teams that move fast"
-      leftSubtitle="Track competitors, capture switching leads, and turn complaints into roadmap wins."
+      leftTitle="Turning Frustration Into Competitive Advantage"
+      leftSubtitle="Marketing intelligence for teams that move fast"
       features={features}
       cta={
         <p>

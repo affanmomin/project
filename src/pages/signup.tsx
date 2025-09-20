@@ -66,8 +66,8 @@ export default function SignupPage() {
     <AuthLayout
       heading="Create your account"
       subheading="Start with a focused, AI-powered view of your market"
-      leftTitle="Marketing intelligence for teams that move fast"
-      leftSubtitle="Track competitors, capture switching leads, and turn complaints into roadmap wins."
+      leftTitle="Turning Frustration Into Competitive Advantage"
+      leftSubtitle="Marketing intelligence for teams that move fast"
       features={features}
       cta={
         <p>
