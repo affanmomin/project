@@ -15,18 +15,20 @@ import { Card } from "@/components/common/card";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { CompetitorDataPoint } from "@/types";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Competitors() {
   const [competitors, setCompetitors] = useState<CompetitorDataPoint[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const user = useAuth();
 
   useEffect(() => {
     const fetchCompetitors = async () => {
       try {
         setIsLoading(true);
-        const response = await apiClient.getCompetitors();
+        const response = await apiClient.getCompetitors(user?.user?.id);
         const competitorsData = response.data.find(
           (card) => card.key === "all-competitors"
         );

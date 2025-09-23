@@ -17,6 +17,7 @@ interface AuthResponse {
 }
 
 interface AuthContextType {
+  id(arg0: { start_date: string; end_date: string; }, id: any): unknown;
   user: User | null;
   token: string | null;
   isLoading: boolean;

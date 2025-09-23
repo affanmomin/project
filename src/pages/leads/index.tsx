@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { formatDate } from "@/lib/utils";
 import { LeadDataPoint } from "@/types";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Leads() {
   const [leads, setLeads] = useState<LeadDataPoint[]>([]);
@@ -39,12 +40,13 @@ export default function Leads() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const userInfo = useAuth();
 
   useEffect(() => {
     const fetchLeads = async () => {
       try {
         setIsLoading(true);
-        const response = await apiClient.getLeads();
+        const response = await apiClient.getLeads(userInfo.user?.id);
         const leadsData = response.data.find(
           (card) => card.key === "all-leads"
         );

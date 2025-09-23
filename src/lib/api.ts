@@ -98,27 +98,27 @@ export const apiClient = {
     api.patch<T>(url, data, config).then((response) => response.data),
 
   // Dashboard cards data
-  getDashboardCards: (dateRange?: DateRangeParams) => {
+  getDashboardCards: (dateRange?: DateRangeParams,user_id?:string) => {
     return apiClient.post<CardsApiResponse>("/cards", {
       queries: DASHBOARD_QUERIES,
-      user_id: "4wCtOfZuvMHPmNVgIUMCDxL6BbE5sjIB",
+      user_id: user_id,
       ...dateRange,
     });
   },
 
   // Competitors data
-  getCompetitors: () => {
+  getCompetitors: (user_id?:string) => {
     return apiClient.post<CardsApiResponse>("/cards", {
       queries: ["all-competitors"],
-      user_id: "4wCtOfZuvMHPmNVgIUMCDxL6BbE5sjIB",
+      user_id: user_id ,
     });
   },
 
   // Leads data
-  getLeads: () => {
+  getLeads: (user_id?: string) => {
     return apiClient.post<CardsApiResponse>("/cards", {
       queries: ["all-leads"],
-      user_id: "4wCtOfZuvMHPmNVgIUMCDxL6BbE5sjIB",
+      user_id: user_id,
     });
   },
 
@@ -127,14 +127,14 @@ export const apiClient = {
       data: any; id: string; name: string 
 }>("/api/competitors", {
       name,
-      user_id: userId || "4wCtOfZuvMHPmNVgIUMCDxL6BbE5sjIB", // Fallback to default user_id
+      user_id: userId, // Fallback to default user_id
     });
   },
 
   removeCompetitor: (competitorId: string, userId?: string) => {
     return apiClient.delete<{ success: boolean }>(`/api/competitors/${competitorId}`, {
       data: {
-        user_id: userId || "4wCtOfZuvMHPmNVgIUMCDxL6BbE5sjIB",
+        user_id: userId,
       }
     });
   },
@@ -153,7 +153,7 @@ export const apiClient = {
         offset: number;
         count: number;
       };
-    }>(`/api/competitors?user_id=${userId || "4wCtOfZuvMHPmNVgIUMCDxL6BbE5sjIB"}`);
+    }>(`/api/competitors?user_id=${userId}`);
   },
 };
 

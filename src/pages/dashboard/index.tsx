@@ -31,7 +31,8 @@ export default function Dashboard() {
           // Default to this year for trend
           start_date: new Date(new Date().getFullYear(), 0, 1).toISOString(),
           end_date: new Date().toISOString(),
-        });
+          
+        },user?.user?.id);
         setDashboardData(response.data);
       } catch (err) {
         setError(

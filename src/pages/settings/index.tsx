@@ -63,7 +63,6 @@ export default function Settings() {
     }
   };
 
-  console.log("user id:", user?.id);
 
   const handleGetUserCompetitors = async () => {
     try {
