@@ -28,6 +28,10 @@ export default function Settings() {
   const [fetchedCompetitors, setFetchedCompetitors] = useState<
     { id: string; name: string; slug: string; created_at: string; user_id: string }[]
   >([]);
+  const [sources, setSources] = useState<
+    { id: string; competitor_id: string; platform: string; enabled: boolean; last_scraped_at: string; created_at: string; competitor_name: string | null; user_id: string | null }[]
+  >([]);
+  const [sourcesLoading, setSourcesLoading] = useState(false);
   const { toast } = useToast();
   
   // Debug log to see current competitors
@@ -74,13 +78,75 @@ export default function Settings() {
     }   
   };
 
+  const handleGetSources = async () => {
+    setSourcesLoading(true);
+    try {
+      const response = await apiClient.getSources();
+      console.log("Fetched sources:", response.data);
+      setSources(response.data);
+    } catch (error) {
+      console.error("Error fetching sources:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch data sources. Using default platforms.",
+        variant: "destructive",
+      });
+    } finally {
+      setSourcesLoading(false);
+    }
+  };
+
+  const handleToggleSource = async (platform: string, newEnabledState: boolean) => {
+    // Find the source for this platform
+    const sourceData = sources.find(source => source.platform.toLowerCase() === platform.toLowerCase());
+    
+    if (!sourceData) {
+      // If no source data, fall back to the store toggle
+      togglePlatform(platform);
+      return;
+    }
+
+    try {
+      // Update via API
+      const response = await apiClient.toggleSource(sourceData.id, newEnabledState);
+      
+      // Update local sources state with the response
+      setSources(prevSources => 
+        prevSources.map(source => 
+          source.id === sourceData.id 
+            ? { ...source, enabled: response.data.enabled }
+            : source
+        )
+      );
+
+      // Also update the store for backward compatibility
+      if (newEnabledState && !platforms.includes(platform)) {
+        togglePlatform(platform);
+      } else if (!newEnabledState && platforms.includes(platform)) {
+        togglePlatform(platform);
+      }
+
+      toast({
+        title: "Success",
+        description: `${platform} ${newEnabledState ? 'enabled' : 'disabled'} successfully`,
+      });
+    } catch (error) {
+      console.error("Error toggling source:", error);
+      toast({
+        title: "Error",
+        description: `Failed to ${newEnabledState ? 'enable' : 'disable'} ${platform}. Please try again.`,
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleRemoveCompetitor = async (competitorId: string) => {
     try {
       await apiClient.removeCompetitor(competitorId, user?.id);
-      
+      console.log("Removing competitor from store:", competitorId); // Debug log
       // Remove from local store
       removeCompetitor(competitorId);
-      setFetchedCompetitors(prev => prev.filter(competitor => competitor.id !== competitorId));
+      setFetchedCompetitors(prev => prev.filter(competitor => competitor.competitor_id !== competitorId));
 
       
       toast({
@@ -97,13 +163,17 @@ export default function Settings() {
     }
   };
   
-  const availablePlatforms = ["Reddit", "Twitter", "G2", "HackerNews", "ProductHunt"];
+  // Get unique platforms from sources data, fallback to hardcoded list
+  const availablePlatforms = sources.length > 0 
+    ? [...new Set(sources.map(source => source.platform))]
+    : ["Reddit", "Twitter", "G2", "HackerNews", "ProductHunt"];
 
-  // Add useEffect to fetch competitors on component mount
+  // Add useEffect to fetch competitors and sources on component mount
   useEffect(() => {
     if (user?.id) {
       handleGetUserCompetitors();
     }
+    handleGetSources();
   }, [user?.id]);
 
   return (
@@ -138,14 +208,14 @@ export default function Settings() {
             {fetchedCompetitors.length > 0 ? (
               fetchedCompetitors.map((data) => (
                 <div
-                  key={data.id}
+                  key={data.competitor_id}
                   className="flex items-center justify-between p-3 bg-muted/50 rounded-md"
                 >
                   <span>{data.name}</span>
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleRemoveCompetitor(data.id)}
+                    onClick={() => handleRemoveCompetitor(data.competitor_id)}
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
@@ -164,21 +234,35 @@ export default function Settings() {
         title="Data Sources"
         description="Select platforms to monitor for mentions"
       >
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {availablePlatforms.map((platform) => (
-            <div
-              key={platform}
-              className="flex items-center space-x-2"
-            >
-              <Switch
-                id={`platform-${platform}`}
-                checked={platforms.includes(platform)}
-                onCheckedChange={() => togglePlatform(platform)}
-              />
-              <Label htmlFor={`platform-${platform}`}>{platform}</Label>
-            </div>
-          ))}
-        </div>
+        {sourcesLoading ? (
+          <div className="text-center py-6 text-muted-foreground">
+            Loading data sources...
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {availablePlatforms.map((platform) => {
+              // Find the source for this platform to get its enabled state
+              const sourceData = sources.find(source => source.platform.toLowerCase() === platform.toLowerCase());
+              const isEnabled = sourceData ? sourceData.enabled : platforms.includes(platform);
+              
+              return (
+                <div
+                  key={platform}
+                  className="flex items-center space-x-2"
+                >
+                  <Switch
+                    id={`platform-${platform}`}
+                    checked={isEnabled}
+                    onCheckedChange={(checked) => handleToggleSource(platform, checked)}
+                  />
+                  <Label htmlFor={`platform-${platform}`} className="capitalize">
+                    {platform}
+                  </Label>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </Card>
       
       <Card

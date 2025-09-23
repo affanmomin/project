@@ -155,6 +155,40 @@ export const apiClient = {
       };
     }>(`/api/competitors?user_id=${userId}`);
   },
+
+  getSources: () => {
+    return apiClient.get<{
+      success: boolean;
+      data: Array<{
+        id: string;
+        competitor_id: string;
+        platform: string;
+        enabled: boolean;
+        last_scraped_at: string;
+        created_at: string;
+        competitor_name: string | null;
+        user_id: string | null;
+      }>;
+    }>("/api/sources");
+  },
+
+  toggleSource: (sourceId: string, enabled: boolean) => {
+    return apiClient.patch<{
+      success: boolean;
+      data: {
+        id: string;
+        competitor_id: string;
+        platform: string;
+        enabled: boolean;
+        last_scraped_at: string;
+        created_at: string;
+        competitor_name: string | null;
+        user_id: string | null;
+      };
+    }>(`/api/sources/${sourceId}/toggle`, {
+      enabled,
+    });
+  },
 };
 
 export default api;
