@@ -1,5 +1,6 @@
 import { SummaryMetrics } from "@/components/dashboard/summary-metrics";
 import { TopComplaints } from "@/components/dashboard/top-complaints";
+import { TopFeatures } from "@/components/dashboard/top-features";
 import { TopAlternatives } from "@/components/dashboard/top-alternatives";
 import { RecentLeads } from "@/components/dashboard/recent-leads";
 import { SentimentChart } from "@/components/common/sentiment-chart";
@@ -8,6 +9,7 @@ import { useEffect, useState } from "react";
 import type {
   CardResponse,
   ComplaintCardResponse,
+  FeatureCardResponse,
   AlternativeCardResponse,
   LeadCardResponse,
   MetricCardResponse,
@@ -121,13 +123,18 @@ export default function Dashboard() {
           />
         </div>
         <div>
-          <TopComplaints
-            data={getCardData<ComplaintCardResponse>("top-complaints", "bar")}
+          <TopFeatures
+            data={getCardData<FeatureCardResponse>("top-features", "bar")}
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div>
+          <TopComplaints
+            data={getCardData<ComplaintCardResponse>("top-complaints", "bar")}
+          />
+        </div>
         <div>
           <TopAlternatives
             data={getCardData<AlternativeCardResponse>(
@@ -136,7 +143,7 @@ export default function Dashboard() {
             )}
           />
         </div>
-        <div className="lg:col-span-2">
+        <div>
           <RecentLeads
             data={getCardData<LeadCardResponse>(
               "recent-switching-leads",

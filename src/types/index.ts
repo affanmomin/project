@@ -14,6 +14,12 @@ export interface ComplaintDataPoint {
   value: string;
 }
 
+export interface FeatureDataPoint {
+  name: string | null;
+  label: string;
+  value: string;
+}
+
 export interface AlternativeDataPoint {
   alternative: string | null;
   mentions: string;
@@ -46,6 +52,11 @@ export interface ComplaintCardResponse extends CardResponse {
   data: ComplaintDataPoint[];
 }
 
+export interface FeatureCardResponse extends CardResponse {
+  chartType: "bar";
+  data: FeatureDataPoint[];
+}
+
 export interface AlternativeCardResponse extends CardResponse {
   chartType: "bar";
   data: AlternativeDataPoint[];
@@ -59,6 +70,7 @@ export interface LeadCardResponse extends CardResponse {
 export type CardDataPoint =
   | MetricDataPoint
   | ComplaintDataPoint
+  | FeatureDataPoint
   | AlternativeDataPoint
   | LeadDataPoint;
 

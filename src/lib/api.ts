@@ -76,6 +76,7 @@ export const DASHBOARD_QUERIES = [
   "recurring-complaints",
   "alternatives-mentioned",
   "top-complaints",
+  "top-features",
   "top-alternatives",
   "recent-switching-leads",
   "complaint-trend",
