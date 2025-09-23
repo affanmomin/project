@@ -122,12 +122,13 @@ export const apiClient = {
     });
   },
 
-  addCompetitor: (name: string, userId?: string) => {
+  addCompetitor: (name: string, userId?: string, sourceIds?: string[]) => {
     return apiClient.post<{
       data: any; id: string; name: string 
 }>("/api/competitors", {
       name,
-      user_id: userId, // Fallback to default user_id
+      user_id: userId,
+      source_ids: sourceIds,
     });
   },
 
