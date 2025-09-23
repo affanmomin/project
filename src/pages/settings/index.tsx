@@ -3,9 +3,10 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/common/card";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, ChevronDown, ChevronRight } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,6 +26,9 @@ export default function Settings() {
   const { user } = useAuth();
   const [newCompetitor, setNewCompetitor] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [removingCompetitorId, setRemovingCompetitorId] = useState<string | null>(null);
+  const [expandedCompetitors, setExpandedCompetitors] = useState<Set<string>>(new Set());
+  const [competitorSources, setCompetitorSources] = useState<Record<string, any[]>>({});
   const [fetchedCompetitors, setFetchedCompetitors] = useState<
     { id: string; name: string; slug: string; created_at: string; user_id: string; competitor_id: string }[]
   >([]);
@@ -70,6 +74,18 @@ export default function Settings() {
       addCompetitor({ id: response.data.id, name: response.data.name });
       setFetchedCompetitors(prev => [...prev, response.data]);
       setNewCompetitor("");
+      
+      // Reset all sources to disabled state
+      setSources(prevSources => 
+        prevSources.map(source => ({ ...source, enabled: false }))
+      );
+      
+      // Also reset the platforms in the store for backward compatibility
+      platforms.forEach(platform => {
+        if (platforms.includes(platform)) {
+          togglePlatform(platform);
+        }
+      });
       
       toast({
         title: "Success",
@@ -161,12 +177,13 @@ export default function Settings() {
   };
 
   const handleRemoveCompetitor = async (competitorId: string) => {
+    setRemovingCompetitorId(competitorId);
     try {
       await apiClient.removeCompetitor(competitorId, user?.id);
       console.log("Removing competitor from store:", competitorId); // Debug log
       // Remove from local store
       removeCompetitor(competitorId);
-            setFetchedCompetitors(prev => prev.filter(competitor => competitor.competitor_id !== competitorId));
+      setFetchedCompetitors(prev => prev.filter(competitor => competitor.competitor_id !== competitorId));
 
       
       toast({
@@ -180,6 +197,41 @@ export default function Settings() {
         description: "Failed to remove competitor. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setRemovingCompetitorId(null);
+    }
+  };
+
+  const handleToggleAccordion = async (competitorId: string) => {
+    const isExpanded = expandedCompetitors.has(competitorId);
+    
+    if (isExpanded) {
+      // Collapse
+      setExpandedCompetitors(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(competitorId);
+        return newSet;
+      });
+    } else {
+      // Expand and fetch sources if not already fetched
+      setExpandedCompetitors(prev => new Set(prev).add(competitorId));
+      
+      if (!competitorSources[competitorId]) {
+        try {
+          const response = await apiClient.getCompetitorSources(competitorId);
+          setCompetitorSources(prev => ({
+            ...prev,
+            [competitorId]: response.data
+          }));
+        } catch (error) {
+          console.error("Error fetching competitor sources:", error);
+          toast({
+            title: "Error",
+            description: "Failed to fetch competitor data sources.",
+            variant: "destructive",
+          });
+        }
+      }
     }
   };
   
@@ -327,23 +379,88 @@ export default function Settings() {
         title="Existing Competitors"
         description="Manage your tracked competitors"
       >
-        <div className="space-y-2">
+        <div className="space-y-3">
           {fetchedCompetitors.length > 0 ? (
-            fetchedCompetitors.map((data) => (
-              <div
-                key={data.id}
-                className="flex items-center justify-between p-3 bg-muted/50 rounded-md"
-              >
-                <span>{data.name}</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleRemoveCompetitor(data.competitor_id)}
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </div>
-            ))
+            fetchedCompetitors.map((data) => {
+              const isExpanded = expandedCompetitors.has(data.competitor_id);
+              const sources = competitorSources[data.competitor_id] || [];
+              
+              return (
+                <Collapsible key={data.id} open={isExpanded} onOpenChange={() => handleToggleAccordion(data.competitor_id)}>
+                  <div className="p-3 bg-muted/50 rounded-md">
+                    {/* Header Row */}
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{data.name}</span>
+                      <div className="flex items-center space-x-2">
+                        <CollapsibleTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs px-3 py-1 h-8"
+                          >
+                            {isExpanded ? (
+                              <>
+                                <ChevronDown className="h-3 w-3 mr-1" />
+                                Hide Platforms
+                              </>
+                            ) : (
+                              <>
+                                <ChevronRight className="h-3 w-3 mr-1" />
+                                View Platforms
+                              </>
+                            )}
+                          </Button>
+                        </CollapsibleTrigger>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleRemoveCompetitor(data.competitor_id)}
+                          disabled={removingCompetitorId === data.competitor_id}
+                        >
+                          {removingCompetitorId === data.competitor_id ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                          ) : (
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {/* Collapsible Content */}
+                    <CollapsibleContent className="mt-3">
+                      <div className="border-t pt-3">
+                        <h4 className="text-sm font-medium mb-2 text-muted-foreground">Data Sources:</h4>
+                        {sources.length > 0 ? (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {sources.map((source, index) => (
+                              <div
+                                key={source.id || index}
+                                className="flex items-center justify-between p-2 bg-background/50 rounded border"
+                              >
+                                <span className="text-sm capitalize font-medium">{source.platform}</span>
+                                {/* <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  source.enabled 
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                                    : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+                                }`}>
+                                </div> */}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center py-4">
+                            <div className="flex items-center space-x-2 text-muted-foreground">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                              <span className="text-sm">Loading data sources...</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </CollapsibleContent>
+                  </div>
+                </Collapsible>
+              );
+            })
           ) : (
             <div className="text-center py-6 text-muted-foreground">
               No competitors added yet.

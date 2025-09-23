@@ -190,6 +190,22 @@ export const apiClient = {
       enabled,
     });
   },
+
+  getCompetitorSources: (competitorId: string) => {
+    return apiClient.get<{
+      success: boolean;
+      data: Array<{
+        id: string;
+        platform: string;
+        enabled: boolean;
+        last_scraped_at: string;
+        created_at: string;
+        linked_at: string;
+        link_updated_at: string;
+      }>;
+      competitor_id: string;
+    }>(`/api/competitors/${competitorId}/sources`);
+  },
 };
 
 export default api;
