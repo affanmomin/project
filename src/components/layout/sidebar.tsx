@@ -6,7 +6,9 @@ import {
   Settings, 
   Menu, 
   X,
-  LayoutDashboard
+  LayoutDashboard,
+  Star,
+  AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NavLink } from 'react-router-dom';
@@ -16,6 +18,8 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Competitors', href: '/competitors', icon: Target },
   { name: 'Leads', href: '/leads', icon: Users },
+  { name: 'Features', href: '/features', icon: Star },
+  { name: 'Complaints', href: '/complaints', icon: AlertTriangle },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 

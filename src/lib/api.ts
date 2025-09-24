@@ -110,7 +110,7 @@ export const apiClient = {
   // Competitors data
   getCompetitors: (user_id?:string) => {
     return apiClient.post<CardsApiResponse>("/cards", {
-      queries: ["all-competitors"],
+      queries: ["top-competitors"],
       user_id: user_id ,
     });
   },
@@ -119,6 +119,22 @@ export const apiClient = {
   getLeads: (user_id?: string) => {
     return apiClient.post<CardsApiResponse>("/cards", {
       queries: ["all-leads"],
+      user_id: user_id,
+    });
+  },
+
+  // Features data
+  getFeatures: (user_id?: string) => {
+    return apiClient.post<CardsApiResponse>("/cards", {
+      queries: ["top-features"],
+      user_id: user_id,
+    });
+  },
+
+  // Complaints data
+  getComplaints: (user_id?: string) => {
+    return apiClient.post<CardsApiResponse>("/cards", {
+      queries: ["top-complaints"],
       user_id: user_id,
     });
   },

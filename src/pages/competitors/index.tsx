@@ -30,7 +30,7 @@ export default function Competitors() {
         setIsLoading(true);
         const response = await apiClient.getCompetitors(user?.user?.id);
         const competitorsData = response.data.find(
-          (card) => card.key === "all-competitors"
+          (card) => card.key === "top-competitors"
         );
         if (competitorsData?.data) {
           setCompetitors(competitorsData.data as CompetitorDataPoint[]);

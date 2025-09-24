@@ -7,6 +7,8 @@ import Dashboard from '@/pages/dashboard';
 import Competitors from '@/pages/competitors';
 import CompetitorDetails from '@/pages/competitors/[id]';
 import Leads from '@/pages/leads';
+import Features from '@/pages/features';
+import Complaints from '@/pages/complaints';
 import Settings from '@/pages/settings';
 import NotFound from '@/pages/not-found';
 import SignupPage from '@/pages/signup';
@@ -29,6 +31,8 @@ function App() {
                   <Route path="/competitors" element={<Competitors />} />
                   <Route path="/competitors/:id" element={<CompetitorDetails />} />
                   <Route path="/leads" element={<Leads />} />
+                  <Route path="/features" element={<Features />} />
+                  <Route path="/complaints" element={<Complaints />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>

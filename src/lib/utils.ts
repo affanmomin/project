@@ -22,6 +22,8 @@ export function getPageTitle(pathname: string): string {
     dashboard: 'Dashboard',
     competitors: 'Competitors',
     leads: 'Switching Leads',
+    features: 'Feature Requests',
+    complaints: 'Customer Complaints',
     settings: 'Settings',
   };
   
