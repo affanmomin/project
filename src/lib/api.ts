@@ -110,7 +110,7 @@ export const apiClient = {
   // Competitors data
   getCompetitors: (user_id?:string) => {
     return apiClient.post<CardsApiResponse>("/cards", {
-      queries: ["top-competitors"],
+      queries: ["all-competitors"],
       user_id: user_id ,
     });
   },
