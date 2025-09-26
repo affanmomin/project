@@ -399,13 +399,15 @@ export default function Settings() {
                     >
                       <Label 
                         htmlFor={`platform-${platform}`} 
-                        className="flex items-center space-x-3 cursor-pointer flex-1"
+                        className="flex items-center space-x-3 cursor-pointer flex-1 min-w-0"
                       >
-                        <div className={`w-2 h-2 rounded-full ${isEnabled ? 'bg-primary' : 'bg-muted-foreground/40'}`}></div>
-                        <div className="flex flex-col">
-                          <span className="capitalize font-medium text-sm">{platform}</span>
+                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isEnabled ? 'bg-primary' : 'bg-muted-foreground/40'}`}></div>
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <span className="capitalize font-medium text-sm truncate" title={platform}>
+                            {platform}
+                          </span>
                           {isEnabled && platformUsernames[platform.toLowerCase()] && (
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-xs text-muted-foreground truncate" title={platformUsernames[platform.toLowerCase()]}>
                               {platformUsernames[platform.toLowerCase()]}
                             </span>
                           )}
@@ -415,7 +417,7 @@ export default function Settings() {
                         id={`platform-${platform}`}
                         checked={isEnabled}
                         onCheckedChange={(checked) => handleToggleSource(platform, checked)}
-                        className="ml-2"
+                        className="ml-2 flex-shrink-0"
                       />
                     </div>
                   );
