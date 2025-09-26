@@ -137,7 +137,12 @@ export default function Settings() {
     try {
       const response = await apiClient.getSources();
       console.log("Fetched sources:", response.data);
-      setSources(response.data);
+      // Ensure all sources are disabled initially
+      const sourcesWithDisabledState = response.data.map(source => ({
+        ...source,
+        enabled: false
+      }));
+      setSources(sourcesWithDisabledState);
     } catch (error) {
       console.error("Error fetching sources:", error);
       toast({

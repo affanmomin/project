@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -29,27 +29,40 @@ export function UsernameDialog({
   const [username, setUsername] = useState("");
   const [error, setError] = useState("");
 
+  // Clear username and error when dialog opens or platform changes
+  useEffect(() => {
+    if (isOpen) {
+      setUsername("");
+      setError("");
+    }
+  }, [isOpen, platform]);
+
+  const isValidUrl = (string: string) => {
+    try {
+      const url = new URL(string);
+      return url.protocol === "http:" || url.protocol === "https:";
+    } catch (_) {
+      return false;
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!username.trim()) {
-      setError("Username is required");
+      setError(platform.toLowerCase() === "website" ? "Website URL is required" : "Username is required");
       return;
     }
 
     // Basic validation based on platform
     const trimmedUsername = username.trim();
     
-    if (platform.toLowerCase() === "twitter" && !trimmedUsername.startsWith("@")) {
-      setError("Twitter username should start with @");
-      return;
-    }
-    
-    if (platform.toLowerCase() === "reddit" && trimmedUsername.startsWith("/u/")) {
-      setError("Reddit username should not include /u/ prefix");
-      return;
-    }
-
+    if (platform.toLowerCase() === "website") {
+      if (!isValidUrl(trimmedUsername)) {
+        setError("Please enter a valid URL (must start with http:// or https://)");
+        return;
+      }
+    }  
     setError("");
     onConfirm(trimmedUsername);
   };
@@ -62,6 +75,8 @@ export function UsernameDialog({
 
   const getPlaceholder = () => {
     switch (platform.toLowerCase()) {
+      case "website":
+        return "https://example.com";
       case "twitter":
         return "@username";
       case "reddit":
@@ -79,6 +94,8 @@ export function UsernameDialog({
 
   const getDescription = () => {
     switch (platform.toLowerCase()) {
+      case "website":
+        return "Enter the website URL you want to monitor (must include http:// or https://)";
       case "twitter":
         return "Enter the Twitter handle you want to monitor (e.g., @tesla)";
       case "reddit":
@@ -108,7 +125,7 @@ export function UsernameDialog({
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="username" className="text-sm font-medium">
-                {platform} Username
+                {platform.toLowerCase() === "website" ? "Website URL" : `${platform} Username`}
               </Label>
               <Input
                 id="username"
