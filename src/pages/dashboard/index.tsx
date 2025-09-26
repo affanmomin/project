@@ -23,7 +23,6 @@ export default function Dashboard() {
   const [dashboardData, setDashboardData] = useState<CardResponse[]>([]);
   const [error, setError] = useState<string | null>(null);
   const user = useAuth();
-  console.log("Authenticated user:", user);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -108,6 +107,11 @@ export default function Dashboard() {
       }))
     : [];
 
+  // Get alternatives data
+  const getAlternativesData = () => {
+    return getCardData<AlternativeCardResponse>("top-alternatives-short", "bar");
+  };
+
   return (
     <div className="space-y-6">
       <SummaryMetrics metrics={metricsData} />
@@ -123,33 +127,35 @@ export default function Dashboard() {
           />
         </div>
         <div>
-          <TopFeatures
-            data={getCardData<FeatureCardResponse>("top-features", "bar")}
-          />
+          {(() => {
+            const featuresData = getCardData<FeatureCardResponse>("top-features-short", "bar");
+            console.log("Features data:", featuresData);
+            return <TopFeatures data={featuresData} />;
+          })()}
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div>
-          <TopComplaints
-            data={getCardData<ComplaintCardResponse>("top-complaints", "bar")}
-          />
+          {(() => {
+            const complaintsData = getCardData<ComplaintCardResponse>("top-complaints-short", "bar");
+            console.log("Complaints data:", complaintsData);
+            return <TopComplaints data={complaintsData} />;
+          })()}
         </div>
         <div>
-          <TopAlternatives
-            data={getCardData<AlternativeCardResponse>(
-              "top-alternatives",
-              "bar"
-            )}
-          />
+          {(() => {
+            const alternativesData = getAlternativesData();
+            console.log("Alternatives data:", alternativesData);
+            return <TopAlternatives data={alternativesData} />;
+          })()}
         </div>
         <div>
-          <RecentLeads
-            data={getCardData<LeadCardResponse>(
-              "recent-switching-leads",
-              "table"
-            )}
-          />
+          {(() => {
+            const leadsData = getCardData<LeadCardResponse>("recent-switching-leads", "table");
+            console.log("Leads data:", leadsData);
+            return <RecentLeads data={leadsData} />;
+          })()}
         </div>
       </div>
     </div>
