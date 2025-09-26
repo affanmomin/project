@@ -141,13 +141,13 @@ export const apiClient = {
     });
   },
 
-  addCompetitor: (name: string, userId?: string, sourceIds?: string[]) => {
+  addCompetitor: (name: string, userId?: string, platforms?: Array<{source_id: string, username: string}>) => {
     return apiClient.post<{
       data: any; id: string; name: string 
 }>("/api/competitors", {
       name,
       user_id: userId,
-      source_ids: sourceIds,
+      platforms: platforms || [],
     });
   },
 
@@ -192,7 +192,7 @@ export const apiClient = {
     }>("/api/sources");
   },
 
-  toggleSource: (sourceId: string, enabled: boolean) => {
+  toggleSource: (sourceId: string, enabled: boolean, username?: string) => {
     return apiClient.patch<{
       success: boolean;
       data: {
@@ -204,9 +204,11 @@ export const apiClient = {
         created_at: string;
         competitor_name: string | null;
         user_id: string | null;
+        username?: string;
       };
     }>(`/api/sources/${sourceId}/toggle`, {
       enabled,
+      ...(username && { username }),
     });
   },
 

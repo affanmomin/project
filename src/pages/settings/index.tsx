@@ -10,6 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { UsernameDialog } from "@/components/common/username-dialog";
 
 export default function Settings() {
   const { 
@@ -36,6 +37,12 @@ export default function Settings() {
     { id: string; competitor_id: string; platform: string; enabled: boolean; last_scraped_at: string; created_at: string; competitor_name: string | null; user_id: string | null }[]
   >([]);
   const [sourcesLoading, setSourcesLoading] = useState(false);
+  const [usernameDialog, setUsernameDialog] = useState<{
+    isOpen: boolean;
+    platform: string;
+    sourceId?: string;
+  }>({ isOpen: false, platform: "", sourceId: undefined });
+  const [platformUsernames, setPlatformUsernames] = useState<Record<string, string>>({});
   const { toast } = useToast();
   
   // Debug log to see current competitors
@@ -59,15 +66,18 @@ export default function Settings() {
     
     setIsLoading(true);
     try {
-      // Get enabled source IDs
-      const enabledSourceIds = sources
+      // Build platforms array with source_id and username for enabled sources
+      const enabledPlatforms = sources
         .filter(source => source.enabled)
-        .map(source => source.id);
+        .map(source => ({
+          source_id: source.id,
+          username: platformUsernames[source.platform.toLowerCase()] || ""
+        }));
       
       const response = await apiClient.addCompetitor(
         newCompetitor.trim(), 
         user?.id, 
-        enabledSourceIds
+        enabledPlatforms
       );
       
       // Update the local store with the response from the API
@@ -79,6 +89,9 @@ export default function Settings() {
       setSources(prevSources => 
         prevSources.map(source => ({ ...source, enabled: false }))
       );
+      
+      // Clear stored usernames
+      setPlatformUsernames({});
       
       // Also reset the platforms in the store for backward compatibility
       platforms.forEach(platform => {
@@ -108,7 +121,12 @@ export default function Settings() {
     try {
       const response = await apiClient.getUserCompetitors(user?.id);
       console.log("Fetched competitors:", response.data);
-      setFetchedCompetitors(response.data); // Store the fetched data
+      // Map the response to include competitor_id (same as id for compatibility)
+      const competitorsWithId = response.data.map(competitor => ({
+        ...competitor,
+        competitor_id: competitor.id
+      }));
+      setFetchedCompetitors(competitorsWithId);
     } catch (error) {
       console.error("Error fetching competitors:", error);
     }   
@@ -138,42 +156,107 @@ export default function Settings() {
     
     if (!sourceData) {
       // If no source data, fall back to the store toggle
-      togglePlatform(platform);
+      if (newEnabledState) {
+        // Show username dialog for enabling
+        setUsernameDialog({ isOpen: true, platform, sourceId: undefined });
+      } else {
+        togglePlatform(platform);
+      }
       return;
     }
 
+    if (newEnabledState) {
+      // Show username dialog for enabling
+      setUsernameDialog({ isOpen: true, platform, sourceId: sourceData.id });
+    } else {
+      // Directly disable without username
+      try {
+        const response = await apiClient.toggleSource(sourceData.id, false);
+        
+        // Update local sources state with the response
+        setSources(prevSources => 
+          prevSources.map(source => 
+            source.id === sourceData.id 
+              ? { ...source, enabled: response.data.enabled }
+              : source
+          )
+        );
+
+        // Remove username from local state
+        setPlatformUsernames(prev => {
+          const updated = { ...prev };
+          delete updated[platform.toLowerCase()];
+          return updated;
+        });
+
+        // Also update the store for backward compatibility
+        if (platforms.includes(platform)) {
+          togglePlatform(platform);
+        }
+
+        toast({
+          title: "Success",
+          description: `${platform} disabled successfully`,
+        });
+      } catch (error) {
+        console.error("Error disabling source:", error);
+        toast({
+          title: "Error",
+          description: `Failed to disable ${platform}. Please try again.`,
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const handleUsernameConfirm = async (username: string) => {
+    const { platform, sourceId } = usernameDialog;
+    
     try {
-      // Update via API
-      const response = await apiClient.toggleSource(sourceData.id, newEnabledState);
-      
-      // Update local sources state with the response
-      setSources(prevSources => 
-        prevSources.map(source => 
-          source.id === sourceData.id 
-            ? { ...source, enabled: response.data.enabled }
-            : source
-        )
-      );
+      if (sourceId) {
+        // Update via API with username
+        const response = await apiClient.toggleSource(sourceId, true, username);
+        
+        // Update local sources state
+        setSources(prevSources => 
+          prevSources.map(source => 
+            source.id === sourceId 
+              ? { ...source, enabled: response.data.enabled }
+              : source
+          )
+        );
+      }
+
+      // Store username locally
+      setPlatformUsernames(prev => ({
+        ...prev,
+        [platform.toLowerCase()]: username
+      }));
 
       // Also update the store for backward compatibility
-      if (newEnabledState && !platforms.includes(platform)) {
-        togglePlatform(platform);
-      } else if (!newEnabledState && platforms.includes(platform)) {
+      if (!platforms.includes(platform)) {
         togglePlatform(platform);
       }
 
+      // Close dialog
+      setUsernameDialog({ isOpen: false, platform: "", sourceId: undefined });
+
       toast({
         title: "Success",
-        description: `${platform} ${newEnabledState ? 'enabled' : 'disabled'} successfully`,
+        description: `${platform} enabled successfully with username: ${username}`,
       });
     } catch (error) {
-      console.error("Error toggling source:", error);
+      console.error("Error enabling source with username:", error);
       toast({
         title: "Error",
-        description: `Failed to ${newEnabledState ? 'enable' : 'disable'} ${platform}. Please try again.`,
+        description: `Failed to enable ${platform}. Please try again.`,
         variant: "destructive",
       });
     }
+  };
+
+  const handleUsernameCancel = () => {
+    setUsernameDialog({ isOpen: false, platform: "", sourceId: undefined });
   };
 
   const handleRemoveCompetitor = async (competitorId: string) => {
@@ -319,7 +402,14 @@ export default function Settings() {
                         className="flex items-center space-x-3 cursor-pointer flex-1"
                       >
                         <div className={`w-2 h-2 rounded-full ${isEnabled ? 'bg-primary' : 'bg-muted-foreground/40'}`}></div>
-                        <span className="capitalize font-medium text-sm">{platform}</span>
+                        <div className="flex flex-col">
+                          <span className="capitalize font-medium text-sm">{platform}</span>
+                          {isEnabled && platformUsernames[platform.toLowerCase()] && (
+                            <span className="text-xs text-muted-foreground">
+                              {platformUsernames[platform.toLowerCase()]}
+                            </span>
+                          )}
+                        </div>
                       </Label>
                       <Switch
                         id={`platform-${platform}`}
@@ -503,6 +593,13 @@ export default function Settings() {
           </div>
         </div>
       </Card>
+
+      <UsernameDialog
+        isOpen={usernameDialog.isOpen}
+        platform={usernameDialog.platform}
+        onConfirm={handleUsernameConfirm}
+        onClose={handleUsernameCancel}
+      />
     </div>
   );
 }
