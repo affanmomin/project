@@ -162,6 +162,7 @@ export const apiClient = {
     return apiClient.get<{
       success: boolean;
       data: Array<{
+        competitor_id: string;
         id: string;
         name: string;
         slug: string;

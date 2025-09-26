@@ -122,10 +122,10 @@ export default function Settings() {
       const response = await apiClient.getUserCompetitors(user?.id);
       console.log("Fetched competitors:", response.data);
       // Map the response to include competitor_id (same as id for compatibility)
-      const competitorsWithId = response.data.map(competitor => ({
-        ...competitor,
-        competitor_id: competitor.id
-      }));
+    const competitorsWithId = response.data.map(competitor => ({
+      ...competitor,
+      competitor_id: competitor.competitor_id || competitor.id
+    }));
       setFetchedCompetitors(competitorsWithId);
     } catch (error) {
       console.error("Error fetching competitors:", error);
