@@ -81,7 +81,7 @@ export const AuthLayout = ({
                 @
               </span>
               <span className="text-xl font-semibold tracking-tight">
-                InsightMiner
+                RivalEye
               </span>
             </>
           )}

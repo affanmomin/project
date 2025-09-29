@@ -67,12 +67,25 @@ export interface LeadCardResponse extends CardResponse {
   data: LeadDataPoint[];
 }
 
+// Time-series trend point (e.g., complaint-trend)
+export interface TrendDataPoint {
+  date: string;
+  value: string;
+  label: string | null;
+}
+
+export interface TrendCardResponse extends Omit<CardResponse, "data"> {
+  chartType: "line";
+  data: TrendDataPoint[];
+}
+
 export type CardDataPoint =
   | MetricDataPoint
   | ComplaintDataPoint
   | FeatureDataPoint
   | AlternativeDataPoint
-  | LeadDataPoint;
+  | LeadDataPoint
+  | TrendDataPoint;
 
 export interface CardsApiResponse {
   success: boolean;
@@ -82,21 +95,6 @@ export interface CardsApiResponse {
 export interface DateRangeParams {
   start_date?: string;
   end_date?: string;
-}
-
-// Time-series trend point (e.g., complaint-trend)
-export interface TrendDataPoint {
-  date: string;
-  value: string;
-  label: string | null;
-}
-
-export interface TrendCardResponse {
-  key: string;
-  title: string;
-  description: string;
-  chartType: "line";
-  data: TrendDataPoint[];
 }
 
 // Generic line chart point used by SentimentChart

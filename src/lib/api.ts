@@ -84,6 +84,14 @@ export const DASHBOARD_QUERIES = [
   "complaint-trend",
 ] as const;
 
+export const COMPETITOR_QUERIES = [
+  "competitor-top-complaints-short",
+  "competitor-top-features-short",
+  "competitor-top-alternatives-short",
+  "competitor-recent-switching-leads",
+  "competitor-complaint-trend",
+] as const;
+
 export const apiClient = {
   get: <T>(url: string, config = {}) =>
     api.get<T>(url, config).then((response) => response.data),
@@ -101,7 +109,7 @@ export const apiClient = {
     api.patch<T>(url, data, config).then((response) => response.data),
 
   // Dashboard cards data
-  getDashboardCards: (dateRange?: DateRangeParams,user_id?:string) => {
+  getDashboardCards: (dateRange?: DateRangeParams, user_id?: string) => {
     return apiClient.post<CardsApiResponse>("/cards", {
       queries: DASHBOARD_QUERIES,
       user_id: user_id,
@@ -109,11 +117,28 @@ export const apiClient = {
     });
   },
 
+  // Competitor cards data
+  getCompetitorCards: (
+    competitorId: string,
+    userId: string,
+    dateRange?: DateRangeParams
+  ) => {
+    const params = new URLSearchParams({
+      user_id: userId,
+      ...(dateRange?.start_date && { start_date: dateRange.start_date }),
+      ...(dateRange?.end_date && { end_date: dateRange.end_date }),
+    });
+
+    return apiClient.get<CardsApiResponse>(
+      `/cards/competitor/${competitorId}?${params}`
+    );
+  },
+
   // Competitors data
-  getCompetitors: (user_id?:string) => {
+  getCompetitors: (user_id?: string) => {
     return apiClient.post<CardsApiResponse>("/cards", {
       queries: ["all-competitors"],
-      user_id: user_id ,
+      user_id: user_id,
     });
   },
 
@@ -141,10 +166,16 @@ export const apiClient = {
     });
   },
 
-  addCompetitor: (name: string, userId?: string, platforms?: Array<{source_id: string, username: string}>) => {
+  addCompetitor: (
+    name: string,
+    userId?: string,
+    platforms?: Array<{ source_id: string; username: string }>
+  ) => {
     return apiClient.post<{
-      data: any; id: string; name: string 
-}>("/api/competitors", {
+      data: any;
+      id: string;
+      name: string;
+    }>("/api/competitors", {
       name,
       user_id: userId,
       platforms: platforms || [],
@@ -152,13 +183,16 @@ export const apiClient = {
   },
 
   removeCompetitor: (competitorId: string, userId?: string) => {
-    return apiClient.delete<{ success: boolean }>(`/api/competitors/${competitorId}`, {
-      data: {
-        user_id: userId,
+    return apiClient.delete<{ success: boolean }>(
+      `/api/competitors/${competitorId}`,
+      {
+        data: {
+          user_id: userId,
+        },
       }
-    });
+    );
   },
-    getUserCompetitors: (userId?: string) => {
+  getUserCompetitors: (userId?: string) => {
     return apiClient.get<{
       success: boolean;
       data: Array<{
@@ -175,6 +209,59 @@ export const apiClient = {
         count: number;
       };
     }>(`/api/competitors?user_id=${userId}`);
+  },
+
+  // Get user's own company/competitor data (for self-analytics)
+  getUserCompany: (userId: string) => {
+    return apiClient.get<{
+      success: boolean;
+      data: Array<{
+        competitor_id: string;
+        name: string;
+        slug: string;
+        created_at: string;
+        updated_at: string;
+        user_id: string;
+        is_user: boolean;
+        sources: Array<{
+          competitor_source_id: string;
+          competitor_id: string;
+          source_id: string;
+          username: string;
+          source_created_at: string;
+          source_updated_at: string;
+          platform: string;
+          enabled: boolean;
+          last_scraped_at: string | null;
+        }>;
+      }>;
+    }>(`/user/company?user_id=${userId}`);
+  },
+
+  // Get competitor details by ID
+  getCompetitorDetails: (competitorId: string) => {
+    return apiClient.get<{
+      success: boolean;
+      data: {
+        competitor_id: string;
+        name: string;
+        slug: string;
+        created_at: string;
+        user_id: string;
+        sources: Array<{
+          competitor_source_id: string;
+          competitor_id: string;
+          source_id: string;
+          username: string;
+          source_created_at: string;
+          source_updated_at: string;
+          source_name: string;
+          platform: string;
+          enabled: boolean;
+          last_scraped_at: string;
+        }>;
+      };
+    }>(`/api/competitors/${competitorId}`);
   },
 
   getSources: () => {
