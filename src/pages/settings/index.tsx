@@ -1,4 +1,3 @@
-import { useAppStore } from "@/lib/store";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,35 +5,88 @@ import { Card } from "@/components/common/card";
 import { Trash2, Plus, ChevronDown, ChevronRight } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { UsernameDialog } from "@/components/common/username-dialog";
 
 export default function Settings() {
-  const { 
-    platforms, 
-    notifications, 
-    emailDigests, 
-    addCompetitor, 
-    removeCompetitor, 
-    togglePlatform, 
-    toggleNotifications, 
-    toggleEmailDigests 
-  } = useAppStore();
-  
+  // Local state instead of store
+  const [platforms] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState(true);
+  const [emailDigests, setEmailDigests] = useState(true);
+
+  // Helper functions
+  const addCompetitor = (competitor: { id: string; name: string }) => {
+    setFetchedCompetitors((prev) => [
+      ...prev,
+      {
+        ...competitor,
+        slug: competitor.name.toLowerCase(),
+        created_at: new Date().toISOString(),
+        user_id: user?.id || "",
+        competitor_id: competitor.id,
+      },
+    ]);
+  };
+
+  const removeCompetitor = (competitorId: string) => {
+    setFetchedCompetitors((prev) =>
+      prev.filter((comp) => comp.id !== competitorId)
+    );
+  };
+
+  const togglePlatform = (platform: any) => {
+    // Platform toggle logic would go here
+    console.log("Toggle platform:", platform);
+  };
+
+  const toggleNotifications = () => {
+    setNotifications((prev) => !prev);
+  };
+
+  const toggleEmailDigests = () => {
+    setEmailDigests((prev) => !prev);
+  };
+
   const { user } = useAuth();
   const [newCompetitor, setNewCompetitor] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [removingCompetitorId, setRemovingCompetitorId] = useState<string | null>(null);
-  const [expandedCompetitors, setExpandedCompetitors] = useState<Set<string>>(new Set());
-  const [competitorSources, setCompetitorSources] = useState<Record<string, any[]>>({});
+  const [removingCompetitorId, setRemovingCompetitorId] = useState<
+    string | null
+  >(null);
+  const [expandedCompetitors, setExpandedCompetitors] = useState<Set<string>>(
+    new Set()
+  );
+  const [competitorSources, setCompetitorSources] = useState<
+    Record<string, any[]>
+  >({});
   const [fetchedCompetitors, setFetchedCompetitors] = useState<
-    { id: string; name: string; slug: string; created_at: string; user_id: string; competitor_id: string }[]
+    {
+      id: string;
+      name: string;
+      slug: string;
+      created_at: string;
+      user_id: string;
+      competitor_id: string;
+    }[]
   >([]);
   const [sources, setSources] = useState<
-    { id: string; competitor_id: string; platform: string; enabled: boolean; last_scraped_at: string; created_at: string; competitor_name: string | null; user_id: string | null }[]
+    {
+      id: string;
+      competitor_id: string;
+      platform: string;
+      enabled: boolean;
+      last_scraped_at: string;
+      created_at: string;
+      competitor_name: string | null;
+      user_id: string | null;
+    }[]
   >([]);
   const [sourcesLoading, setSourcesLoading] = useState(false);
   const [usernameDialog, setUsernameDialog] = useState<{
@@ -42,64 +94,68 @@ export default function Settings() {
     platform: string;
     sourceId?: string;
   }>({ isOpen: false, platform: "", sourceId: undefined });
-  const [platformUsernames, setPlatformUsernames] = useState<Record<string, string>>({});
+  const [platformUsernames, setPlatformUsernames] = useState<
+    Record<string, string>
+  >({});
   const { toast } = useToast();
-  
+
   // Debug log to see current competitors
-  
+
   const handleAddCompetitor = async () => {
     if (!newCompetitor.trim()) return;
-    
+
     // Check if at least one platform is enabled
-    const hasEnabledPlatform = sources.length > 0 
-      ? sources.some(source => source.enabled)
-      : platforms.length > 0;
-    
+    const hasEnabledPlatform =
+      sources.length > 0
+        ? sources.some((source) => source.enabled)
+        : platforms.length > 0;
+
     if (!hasEnabledPlatform) {
       toast({
         title: "Error",
-        description: "Please enable at least one data source platform before adding a competitor.",
+        description:
+          "Please enable at least one data source platform before adding a competitor.",
         variant: "destructive",
       });
       return;
     }
-    
+
     setIsLoading(true);
     try {
       // Build platforms array with source_id and username for enabled sources
       const enabledPlatforms = sources
-        .filter(source => source.enabled)
-        .map(source => ({
+        .filter((source) => source.enabled)
+        .map((source) => ({
           source_id: source.id,
-          username: platformUsernames[source.platform.toLowerCase()] || ""
+          username: platformUsernames[source.platform.toLowerCase()] || "",
         }));
-      
+
       const response = await apiClient.addCompetitor(
-        newCompetitor.trim(), 
-        user?.id, 
+        newCompetitor.trim(),
+        user?.id,
         enabledPlatforms
       );
-      
+
       // Update the local store with the response from the API
       addCompetitor({ id: response.data.id, name: response.data.name });
-      setFetchedCompetitors(prev => [...prev, response.data]);
+      setFetchedCompetitors((prev) => [...prev, response.data]);
       setNewCompetitor("");
-      
+
       // Reset all sources to disabled state
-      setSources(prevSources => 
-        prevSources.map(source => ({ ...source, enabled: false }))
+      setSources((prevSources) =>
+        prevSources.map((source) => ({ ...source, enabled: false }))
       );
-      
+
       // Clear stored usernames
       setPlatformUsernames({});
-      
+
       // Also reset the platforms in the store for backward compatibility
-      platforms.forEach(platform => {
+      platforms.forEach((platform: any) => {
         if (platforms.includes(platform)) {
           togglePlatform(platform);
         }
       });
-      
+
       toast({
         title: "Success",
         description: "Competitor added successfully",
@@ -116,20 +172,19 @@ export default function Settings() {
     }
   };
 
-
   const handleGetUserCompetitors = async () => {
     try {
       const response = await apiClient.getUserCompetitors(user?.id);
       console.log("Fetched competitors:", response.data);
       // Map the response to include competitor_id (same as id for compatibility)
-    const competitorsWithId = response.data.map(competitor => ({
-      ...competitor,
-      competitor_id: competitor.competitor_id || competitor.id
-    }));
+      const competitorsWithId = response.data.map((competitor) => ({
+        ...competitor,
+        competitor_id: competitor.competitor_id || competitor.id,
+      }));
       setFetchedCompetitors(competitorsWithId);
     } catch (error) {
       console.error("Error fetching competitors:", error);
-    }   
+    }
   };
 
   const handleGetSources = async () => {
@@ -138,9 +193,9 @@ export default function Settings() {
       const response = await apiClient.getSources();
       console.log("Fetched sources:", response.data);
       // Ensure all sources are disabled initially
-      const sourcesWithDisabledState = response.data.map(source => ({
+      const sourcesWithDisabledState = response.data.map((source) => ({
         ...source,
-        enabled: false
+        enabled: false,
       }));
       setSources(sourcesWithDisabledState);
     } catch (error) {
@@ -155,10 +210,15 @@ export default function Settings() {
     }
   };
 
-  const handleToggleSource = async (platform: string, newEnabledState: boolean) => {
+  const handleToggleSource = async (
+    platform: string,
+    newEnabledState: boolean
+  ) => {
     // Find the source for this platform
-    const sourceData = sources.find(source => source.platform.toLowerCase() === platform.toLowerCase());
-    
+    const sourceData = sources.find(
+      (source) => source.platform.toLowerCase() === platform.toLowerCase()
+    );
+
     if (!sourceData) {
       // If no source data, fall back to the store toggle
       if (newEnabledState) {
@@ -177,18 +237,18 @@ export default function Settings() {
       // Directly disable without username
       try {
         const response = await apiClient.toggleSource(sourceData.id, false);
-        
+
         // Update local sources state with the response
-        setSources(prevSources => 
-          prevSources.map(source => 
-            source.id === sourceData.id 
+        setSources((prevSources) =>
+          prevSources.map((source) =>
+            source.id === sourceData.id
               ? { ...source, enabled: response.data.enabled }
               : source
           )
         );
 
         // Remove username from local state
-        setPlatformUsernames(prev => {
+        setPlatformUsernames((prev) => {
           const updated = { ...prev };
           delete updated[platform.toLowerCase()];
           return updated;
@@ -216,16 +276,16 @@ export default function Settings() {
 
   const handleUsernameConfirm = async (username: string) => {
     const { platform, sourceId } = usernameDialog;
-    
+
     try {
       if (sourceId) {
         // Update via API with username
         const response = await apiClient.toggleSource(sourceId, true, username);
-        
+
         // Update local sources state
-        setSources(prevSources => 
-          prevSources.map(source => 
-            source.id === sourceId 
+        setSources((prevSources) =>
+          prevSources.map((source) =>
+            source.id === sourceId
               ? { ...source, enabled: response.data.enabled }
               : source
           )
@@ -233,9 +293,9 @@ export default function Settings() {
       }
 
       // Store username locally
-      setPlatformUsernames(prev => ({
+      setPlatformUsernames((prev) => ({
         ...prev,
-        [platform.toLowerCase()]: username
+        [platform.toLowerCase()]: username,
       }));
 
       // Also update the store for backward compatibility
@@ -271,9 +331,10 @@ export default function Settings() {
       console.log("Removing competitor from store:", competitorId); // Debug log
       // Remove from local store
       removeCompetitor(competitorId);
-      setFetchedCompetitors(prev => prev.filter(competitor => competitor.competitor_id !== competitorId));
+      setFetchedCompetitors((prev) =>
+        prev.filter((competitor) => competitor.competitor_id !== competitorId)
+      );
 
-      
       toast({
         title: "Success",
         description: "Competitor removed successfully",
@@ -292,24 +353,24 @@ export default function Settings() {
 
   const handleToggleAccordion = async (competitorId: string) => {
     const isExpanded = expandedCompetitors.has(competitorId);
-    
+
     if (isExpanded) {
       // Collapse
-      setExpandedCompetitors(prev => {
+      setExpandedCompetitors((prev) => {
         const newSet = new Set(prev);
         newSet.delete(competitorId);
         return newSet;
       });
     } else {
       // Expand and fetch sources if not already fetched
-      setExpandedCompetitors(prev => new Set(prev).add(competitorId));
-      
+      setExpandedCompetitors((prev) => new Set(prev).add(competitorId));
+
       if (!competitorSources[competitorId]) {
         try {
           const response = await apiClient.getCompetitorSources(competitorId);
-          setCompetitorSources(prev => ({
+          setCompetitorSources((prev) => ({
             ...prev,
-            [competitorId]: response.data
+            [competitorId]: response.data,
           }));
         } catch (error) {
           console.error("Error fetching competitor sources:", error);
@@ -322,11 +383,12 @@ export default function Settings() {
       }
     }
   };
-  
+
   // Get unique platforms from sources data, fallback to hardcoded list
-  const availablePlatforms = sources.length > 0 
-    ? [...new Set(sources.map(source => source.platform))]
-    : ["Reddit", "Twitter", "G2", "HackerNews", "ProductHunt"];
+  const availablePlatforms =
+    sources.length > 0
+      ? [...new Set(sources.map((source) => source.platform))]
+      : ["Reddit", "Twitter", "G2", "HackerNews", "ProductHunt"];
 
   // Add useEffect to fetch competitors and sources on component mount
   useEffect(() => {
@@ -366,7 +428,7 @@ export default function Settings() {
               </div>
             </div>
           </div>
-          
+
           {/* Data Sources Section */}
           <div className="space-y-4">
             <div className="border-t pt-4">
@@ -375,10 +437,11 @@ export default function Settings() {
                 <h4 className="text-sm font-semibold">Data Sources</h4>
               </div>
               <p className="text-sm text-muted-foreground mb-4">
-                Choose which platforms to monitor for competitor mentions and discussions
+                Choose which platforms to monitor for competitor mentions and
+                discussions
               </p>
             </div>
-            
+
             {sourcesLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="flex items-center space-x-2 text-muted-foreground">
@@ -390,38 +453,56 @@ export default function Settings() {
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {availablePlatforms.map((platform) => {
                   // Find the source for this platform to get its enabled state
-                  const sourceData = sources.find(source => source.platform.toLowerCase() === platform.toLowerCase());
-                  const isEnabled = sourceData ? sourceData.enabled : platforms.includes(platform);
-                  
+                  const sourceData = sources.find(
+                    (source) =>
+                      source.platform.toLowerCase() === platform.toLowerCase()
+                  );
+                  const isEnabled = sourceData
+                    ? sourceData.enabled
+                    : platforms.includes(platform);
+
                   return (
                     <div
                       key={platform}
                       className={`flex items-center justify-between p-3 rounded-lg border-2 transition-all duration-200 ${
-                        isEnabled 
-                          ? 'border-primary/20 bg-primary/5 shadow-sm' 
-                          : 'border-border/50 bg-background hover:border-border'
+                        isEnabled
+                          ? "border-primary/20 bg-primary/5 shadow-sm"
+                          : "border-border/50 bg-background hover:border-border"
                       }`}
                     >
-                      <Label 
-                        htmlFor={`platform-${platform}`} 
+                      <Label
+                        htmlFor={`platform-${platform}`}
                         className="flex items-center space-x-3 cursor-pointer flex-1 min-w-0"
                       >
-                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${isEnabled ? 'bg-primary' : 'bg-muted-foreground/40'}`}></div>
+                        <div
+                          className={`w-2 h-2 rounded-full flex-shrink-0 ${isEnabled ? "bg-primary" : "bg-muted-foreground/40"}`}
+                        ></div>
                         <div className="flex flex-col min-w-0 flex-1">
-                          <span className="capitalize font-medium text-sm truncate" title={platform}>
+                          <span
+                            className="capitalize font-medium text-sm truncate"
+                            title={platform}
+                          >
                             {platform}
                           </span>
-                          {isEnabled && platformUsernames[platform.toLowerCase()] && (
-                            <span className="text-xs text-muted-foreground truncate" title={platformUsernames[platform.toLowerCase()]}>
-                              {platformUsernames[platform.toLowerCase()]}
-                            </span>
-                          )}
+                          {isEnabled &&
+                            platformUsernames[platform.toLowerCase()] && (
+                              <span
+                                className="text-xs text-muted-foreground truncate"
+                                title={
+                                  platformUsernames[platform.toLowerCase()]
+                                }
+                              >
+                                {platformUsernames[platform.toLowerCase()]}
+                              </span>
+                            )}
                         </div>
                       </Label>
                       <Switch
                         id={`platform-${platform}`}
                         checked={isEnabled}
-                        onCheckedChange={(checked) => handleToggleSource(platform, checked)}
+                        onCheckedChange={(checked) =>
+                          handleToggleSource(platform, checked)
+                        }
                         className="ml-2 flex-shrink-0"
                       />
                     </div>
@@ -435,22 +516,20 @@ export default function Settings() {
           <div className="border-t pt-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="text-sm text-muted-foreground">
-                {sources.length > 0 && sources.some(source => source.enabled) 
-                  ? `${sources.filter(source => source.enabled).length} data source${sources.filter(source => source.enabled).length > 1 ? 's' : ''} selected`
-                  : platforms.length > 0 
-                    ? `${platforms.length} platform${platforms.length > 1 ? 's' : ''} selected`
-                    : 'No data sources selected'
-                }
+                {sources.length > 0 && sources.some((source) => source.enabled)
+                  ? `${sources.filter((source) => source.enabled).length} data source${sources.filter((source) => source.enabled).length > 1 ? "s" : ""} selected`
+                  : platforms.length > 0
+                    ? `${platforms.length} platform${platforms.length > 1 ? "s" : ""} selected`
+                    : "No data sources selected"}
               </div>
-              <Button 
+              <Button
                 onClick={handleAddCompetitor}
                 disabled={
-                  isLoading || 
-                  !newCompetitor.trim() || 
-                  (sources.length > 0 
-                    ? !sources.some(source => source.enabled)
-                    : platforms.length === 0
-                  )
+                  isLoading ||
+                  !newCompetitor.trim() ||
+                  (sources.length > 0
+                    ? !sources.some((source) => source.enabled)
+                    : platforms.length === 0)
                 }
                 className="w-full sm:w-auto px-6 py-2 font-medium"
                 size="default"
@@ -481,9 +560,13 @@ export default function Settings() {
             fetchedCompetitors.map((data) => {
               const isExpanded = expandedCompetitors.has(data.competitor_id);
               const sources = competitorSources[data.competitor_id] || [];
-              
+
               return (
-                <Collapsible key={data.id} open={isExpanded} onOpenChange={() => handleToggleAccordion(data.competitor_id)}>
+                <Collapsible
+                  key={data.id}
+                  open={isExpanded}
+                  onOpenChange={() => handleToggleAccordion(data.competitor_id)}
+                >
                   <div className="p-3 bg-muted/50 rounded-md">
                     {/* Header Row */}
                     <div className="flex items-center justify-between">
@@ -511,7 +594,9 @@ export default function Settings() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleRemoveCompetitor(data.competitor_id)}
+                          onClick={() =>
+                            handleRemoveCompetitor(data.competitor_id)
+                          }
                           disabled={removingCompetitorId === data.competitor_id}
                         >
                           {removingCompetitorId === data.competitor_id ? (
@@ -522,11 +607,13 @@ export default function Settings() {
                         </Button>
                       </div>
                     </div>
-                    
+
                     {/* Collapsible Content */}
                     <CollapsibleContent className="mt-3">
                       <div className="border-t pt-3">
-                        <h4 className="text-sm font-medium mb-2 text-muted-foreground">Data Sources:</h4>
+                        <h4 className="text-sm font-medium mb-2 text-muted-foreground">
+                          Data Sources:
+                        </h4>
                         {sources.length > 0 ? (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {sources.map((source, index) => (
@@ -534,7 +621,9 @@ export default function Settings() {
                                 key={source.id || index}
                                 className="flex items-center justify-between p-2 bg-background/50 rounded border"
                               >
-                                <span className="text-sm capitalize font-medium">{source.platform}</span>
+                                <span className="text-sm capitalize font-medium">
+                                  {source.platform}
+                                </span>
                                 {/* <div className={`px-2 py-1 rounded-full text-xs font-medium ${
                                   source.enabled 
                                     ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
@@ -548,7 +637,9 @@ export default function Settings() {
                           <div className="flex items-center justify-center py-4">
                             <div className="flex items-center space-x-2 text-muted-foreground">
                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
-                              <span className="text-sm">Loading data sources...</span>
+                              <span className="text-sm">
+                                Loading data sources...
+                              </span>
                             </div>
                           </div>
                         )}
@@ -565,7 +656,7 @@ export default function Settings() {
           )}
         </div>
       </Card>
-      
+
       <Card
         title="Notifications"
         description="Configure how you receive updates"
@@ -584,7 +675,7 @@ export default function Settings() {
               onCheckedChange={toggleNotifications}
             />
           </div>
-          
+
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="email-digests">Weekly Email Digests</Label>

@@ -1,11 +1,11 @@
 import { Comment } from "@/types";
-import { 
-  Table, 
-  TableHeader, 
-  TableRow, 
-  TableHead, 
-  TableBody, 
-  TableCell 
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
 } from "@/components/ui/table";
 import { formatDate, getSentimentColor, truncateText } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -46,13 +46,12 @@ export function CommentTable({ comments, className }: CommentTableProps) {
                 </span>
               </TableCell>
               <TableCell className="text-right">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  asChild
-                  className="h-8 w-8"
-                >
-                  <a href={comment.url} target="_blank" rel="noopener noreferrer">
+                <Button variant="ghost" size="icon" asChild className="h-8 w-8">
+                  <a
+                    href={comment.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <ExternalLink className="h-4 w-4" />
                     <span className="sr-only">Open source</span>
                   </a>

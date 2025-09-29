@@ -1,12 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { CompetitorData, Comment, Lead, ClusterPainPoint } from "@/types";
-import {
-  competitorsData,
-  commentsData,
-  leadsData,
-  painPointsData,
-} from "@/data/mock-data";
 
 interface AppState {
   competitors: CompetitorData[];
@@ -19,7 +13,7 @@ interface AppState {
   emailDigests: boolean;
 
   // Actions
-  addCompetitor: (competitor: { id: string; name: string }) => void;
+  addCompetitor: (competitor: CompetitorData) => void;
   removeCompetitor: (id: string) => void;
   selectCompetitor: (id: string | null) => void;
   togglePlatform: (platform: string) => void;
@@ -34,30 +28,19 @@ interface AppState {
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
-      competitors: competitorsData,
-      comments: commentsData,
-      leads: leadsData,
-      painPoints: painPointsData,
+      competitors: [],
+      comments: [],
+      leads: [],
+      painPoints: [],
       selectedCompetitor: null,
       platforms: ["Reddit", "Twitter", "G2"],
       notifications: true,
       emailDigests: true,
 
       // Actions
-      addCompetitor: (competitor: { id: string; name: string }) =>
+      addCompetitor: (competitor: CompetitorData) =>
         set((state) => ({
-          competitors: [
-            ...state.competitors,
-            {
-              id: competitor.id,
-              name: competitor.name,
-              totalMentions: 0,
-              negativeSentiment: 0,
-              trendingComplaints: [],
-              mentionsOverTime: [],
-              alternativesMentioned: [],
-            },
-          ],
+          competitors: [...state.competitors, competitor],
         })),
 
       removeCompetitor: (id: string) =>

@@ -8,8 +8,6 @@ import { TopAlternatives } from "@/components/dashboard/top-alternatives";
 import { RecentLeads } from "@/components/dashboard/recent-leads";
 import {
   MessageSquare,
-  TrendingDown,
-  Repeat,
   Globe,
   Calendar,
   Activity,
@@ -21,8 +19,6 @@ import {
   Hash,
   FileText,
 } from "lucide-react";
-import { MetricsCard } from "@/components/common/metrics-card";
-import { formatNumber } from "@/lib/utils";
 import { apiClient } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import type {
@@ -31,7 +27,6 @@ import type {
   FeatureCardResponse,
   AlternativeCardResponse,
   LeadCardResponse,
-  MetricCardResponse,
   TrendCardResponse,
   MentionPoint,
 } from "@/types";
@@ -122,33 +117,6 @@ export default function CompetitorDetails() {
   };
 
   // Get metrics data from API
-  const totalMentions = getCardData<MetricCardResponse>(
-    "total-mentions",
-    "number"
-  );
-  const negativeSentimentPct = getCardData<MetricCardResponse>(
-    "negative-sentiment-percentage",
-    "number"
-  );
-  const recurringComplaints = getCardData<MetricCardResponse>(
-    "recurring-complaints",
-    "number"
-  );
-  const alternativesMentioned = getCardData<MetricCardResponse>(
-    "alternatives-mentioned",
-    "number"
-  );
-
-  // Calculate negative mentions
-  const negativeMentions =
-    totalMentions && negativeSentimentPct
-      ? Math.round(
-          parseInt(totalMentions.data[0]?.current_value || "0") *
-            (parseFloat(negativeSentimentPct.data[0]?.current_value || "0") /
-              100)
-        )
-      : 0;
-
   // Prepare trend data for SentimentChart
   const complaintTrend = getCardData<TrendCardResponse>(
     "competitor-complaint-trend",

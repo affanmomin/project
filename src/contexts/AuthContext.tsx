@@ -17,7 +17,6 @@ interface AuthResponse {
 }
 
 interface AuthContextType {
-  id(arg0: { start_date: string; end_date: string; }, id: any): unknown;
   user: User | null;
   token: string | null;
   isLoading: boolean;
@@ -29,8 +28,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const TOKEN_KEY = 'auth_token';
-const USER_KEY = 'auth_user';
+const TOKEN_KEY = "auth_token";
+const USER_KEY = "auth_user";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -48,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setToken(savedToken);
         setUser(parsedUser);
       } catch (error) {
-        console.error('Error parsing saved user data:', error);
+        console.error("Error parsing saved user data:", error);
         // Clear invalid data
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
@@ -60,7 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = (authData: AuthResponse) => {
     setUser(authData.user);
     setToken(authData.token);
-    
+
     // Persist to localStorage
     localStorage.setItem(TOKEN_KEY, authData.token);
     localStorage.setItem(USER_KEY, JSON.stringify(authData.user));
@@ -69,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setUser(null);
     setToken(null);
-    
+
     // Clear from localStorage
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
@@ -78,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshSession = () => {
     // Implement token refresh logic here
     // This would typically make an API call to refresh the token
-    console.log('Refreshing session...');
+    console.log("Refreshing session...");
   };
 
   const isAuthenticated = !!(user && token);
@@ -93,7 +92,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshSession,
   };
 
-  return <AuthContext.Provider value={authValue}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={authValue}>{children}</AuthContext.Provider>
+  );
 }
 
 export function useAuth() {

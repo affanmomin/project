@@ -160,3 +160,42 @@ export interface LeadCardResponse {
   chartType: "table";
   data: LeadDataPoint[];
 }
+
+// Additional types for mock data compatibility
+export interface CompetitorData {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  [key: string]: any;
+}
+
+export interface Comment {
+  id: string;
+  username: string;
+  platform: string;
+  content: string;
+  sentiment: number; // 0-1 decimal representing sentiment score
+  date: string;
+  [key: string]: any;
+}
+
+export interface Lead {
+  id: string;
+  username: string;
+  platform: string;
+  excerpt: string;
+  reason: string;
+  status: string | null;
+  date: string;
+  [key: string]: any;
+}
+
+export interface ClusterPainPoint {
+  id: string;
+  cluster: string;
+  pain_point: string;
+  mentions: number;
+  sentiment: number; // 0-1 decimal representing sentiment score
+  [key: string]: any;
+}
