@@ -315,6 +315,33 @@ export const apiClient = {
       competitor_id: string;
     }>(`/api/competitors/${competitorId}/sources`);
   },
+
+  // Add more platforms to existing competitor
+  addCompetitorSources: (
+    competitorId: string,
+    userId: string,
+    platforms: Array<{ source_id: string; username: string }>
+  ) => {
+    return apiClient.post<{
+      success: boolean;
+      data: {
+        competitor: any;
+        added_sources: Array<any>;
+      };
+      analysis?: {
+        new_posts_scraped: number;
+        features_found: number;
+        complaints_found: number;
+        leads_found: number;
+        alternatives_found: number;
+      };
+      warning?: string;
+    }>("/api/competitors/sources", {
+      competitor_id: competitorId,
+      user_id: userId,
+      platforms: platforms,
+    });
+  },
 };
 
 export default api;

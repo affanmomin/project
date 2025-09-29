@@ -61,14 +61,6 @@ export function UsernameDialog({
     // Basic validation based on platform
     const trimmedUsername = username.trim();
 
-    if (platform.toLowerCase() === "website") {
-      if (!isValidUrl(trimmedUsername)) {
-        setError(
-          "Please enter a valid URL (must start with http:// or https://)"
-        );
-        return;
-      }
-    }
     setError("");
     onConfirm(trimmedUsername);
   };

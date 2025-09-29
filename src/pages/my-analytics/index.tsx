@@ -6,6 +6,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -110,6 +118,13 @@ export default function SelfAnalytics() {
   const [hasAnalytics, setHasAnalytics] = useState(false);
   const [userCompanyId, setUserCompanyId] = useState<string | null>(null);
   const [isCheckingExisting, setIsCheckingExisting] = useState(true);
+
+  // Modal state for adding more platforms
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalPlatformUsernames, setModalPlatformUsernames] = useState<
+    Record<string, string>
+  >({});
+  const [isAddingPlatforms, setIsAddingPlatforms] = useState(false);
 
   useEffect(() => {
     // Check if user already has connected platforms/analytics data
@@ -400,6 +415,94 @@ export default function SelfAnalytics() {
     // TODO: Also call API to remove the connection from backend
   };
 
+  // Handle adding more platforms to existing competitor
+  const handleAddMorePlatforms = async () => {
+    if (!userCompanyId || !user?.id) {
+      toast({
+        title: "Error",
+        description: "Missing company or user information",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Get platforms to add (those with usernames that aren't already connected)
+    const platformsToAdd = PLATFORM_CONFIG.filter(
+      (platform) =>
+        modalPlatformUsernames[platform.id]?.trim() &&
+        !connectedPlatforms.some((p) => p.id === platform.id)
+    ).map((platform) => ({
+      source_id: platform.id,
+      username: modalPlatformUsernames[platform.id].trim(),
+    }));
+
+    if (platformsToAdd.length === 0) {
+      toast({
+        title: "No platforms to add",
+        description:
+          "Please enter usernames for new platforms you want to connect.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsAddingPlatforms(true);
+
+    try {
+      const response = await apiClient.addCompetitorSources(
+        userCompanyId,
+        user.id,
+        platformsToAdd
+      );
+
+      if (response.success) {
+        // Update connected platforms with newly added ones
+        const newConnectedPlatforms: ConnectedPlatform[] = platformsToAdd.map(
+          (platform) => {
+            const config = PLATFORM_CONFIG.find(
+              (p) => p.id === platform.source_id
+            );
+            return {
+              id: platform.source_id,
+              name: config?.name || platform.source_id,
+              username: platform.username,
+              status: "connected" as const,
+              lastSync: new Date().toISOString(),
+            };
+          }
+        );
+
+        setConnectedPlatforms((prev) => [...prev, ...newConnectedPlatforms]);
+
+        // Clear modal form
+        setModalPlatformUsernames({});
+        setIsModalOpen(false);
+
+        // Refresh analytics data
+        await fetchAnalyticsDataWithCompetitorId(userCompanyId);
+
+        toast({
+          title: "Platforms Connected",
+          description: `Successfully connected ${platformsToAdd.length} new platform(s). ${
+            response.analysis
+              ? `Scraped ${response.analysis.new_posts_scraped} new posts.`
+              : ""
+          }`,
+        });
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to add platforms";
+      toast({
+        title: "Connection Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsAddingPlatforms(false);
+    }
+  };
+
   // Helper function to get card data (same logic as [id].tsx)
   const getCardData = <T extends CardResponse>(
     key: string,
@@ -492,6 +595,76 @@ export default function SelfAnalytics() {
     );
   }
 
+  // Show processing state when user has connected platforms but analytics data is still being processed
+  if (
+    userCompanyId &&
+    connectedPlatforms.length > 0 &&
+    (!hasAnalytics || dashboardData.length === 0)
+  ) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+            <BarChart3 className="w-8 h-8 text-primary animate-pulse" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Processing Your Data
+            </h1>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              We're analyzing your connected platforms and gathering insights.
+              This usually takes a few minutes.
+            </p>
+          </div>
+        </div>
+
+        <div className="max-w-md mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">Connected Platforms</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {connectedPlatforms.map((platform) => {
+                const config = PLATFORM_CONFIG.find(
+                  (p) => p.id === platform.id
+                );
+                const IconComponent = config?.icon || Globe;
+                return (
+                  <div key={platform.id} className="flex items-center gap-3">
+                    <IconComponent
+                      className={`w-4 h-4 ${config?.color || "text-gray-500"}`}
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{platform.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {platform.username}
+                      </p>
+                    </div>
+                    <Badge
+                      variant="secondary"
+                      className="bg-blue-50 text-blue-700"
+                    >
+                      Processing...
+                    </Badge>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+
+          <div className="mt-4 text-center">
+            <Button
+              onClick={() => fetchAnalyticsDataWithCompetitorId(userCompanyId!)}
+              disabled={isLoading}
+            >
+              {isLoading ? "Checking..." : "Check Again"}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Show analytics dashboard only if we have connected platforms and data
   if (userCompanyId && hasAnalytics && dashboardData.length > 0) {
     // Show analytics dashboard
@@ -506,9 +679,107 @@ export default function SelfAnalytics() {
               Monitor mentions and sentiment across your connected platforms
             </p>
           </div>
-          <Button onClick={() => setHasAnalytics(false)} variant="outline">
-            Manage Connections
-          </Button>
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">Manage Connections</Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Plus className="w-5 h-5" />
+                  Connect More Platforms
+                </DialogTitle>
+                <DialogDescription>
+                  Add more social media accounts and platforms to get
+                  comprehensive analytics across all your channels.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 max-h-96 overflow-y-auto">
+                {PLATFORM_CONFIG.map((platform) => {
+                  const IconComponent = platform.icon;
+                  const isAlreadyConnected = connectedPlatforms.some(
+                    (p) => p.id === platform.id
+                  );
+
+                  if (isAlreadyConnected) {
+                    const connectedPlatform = connectedPlatforms.find(
+                      (p) => p.id === platform.id
+                    );
+                    return (
+                      <div
+                        key={platform.id}
+                        className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg"
+                      >
+                        <IconComponent
+                          className={`w-5 h-5 ${platform.color}`}
+                        />
+                        <div className="flex-1">
+                          <h3 className="font-medium text-sm">
+                            {platform.name}
+                          </h3>
+                          <p className="text-xs text-muted-foreground">
+                            Connected as: {connectedPlatform?.username}
+                          </p>
+                        </div>
+                        <Badge
+                          variant="secondary"
+                          className="bg-green-50 text-green-700"
+                        >
+                          <Check className="w-3 h-3 mr-1" />
+                          Connected
+                        </Badge>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div
+                      key={platform.id}
+                      className="flex items-center gap-3 p-3 border rounded-lg"
+                    >
+                      <IconComponent className={`w-5 h-5 ${platform.color}`} />
+                      <div className="flex-1">
+                        <h3 className="font-medium text-sm">{platform.name}</h3>
+                        <Input
+                          placeholder={platform.placeholder}
+                          value={modalPlatformUsernames[platform.id] || ""}
+                          onChange={(e) =>
+                            setModalPlatformUsernames((prev) => ({
+                              ...prev,
+                              [platform.id]: e.target.value,
+                            }))
+                          }
+                          className="mt-2"
+                          disabled={isAddingPlatforms}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex gap-2 pt-4 border-t">
+                <Button
+                  onClick={handleAddMorePlatforms}
+                  disabled={
+                    isAddingPlatforms ||
+                    !Object.values(modalPlatformUsernames).some((v) =>
+                      v?.trim()
+                    )
+                  }
+                  className="flex-1"
+                >
+                  {isAddingPlatforms
+                    ? "Connecting..."
+                    : "Connect Selected Platforms"}
+                </Button>
+                <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <div className="flex gap-2 mb-6">
