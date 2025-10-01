@@ -54,35 +54,35 @@ import type {
 // Platform configuration
 const PLATFORM_CONFIG = [
   {
-    id: "5d53c057-6e63-47c6-9301-192a3b9fa1d4",
+    id: "14cd087d-b4c2-4356-ae81-6cbec3c8acbf",
     name: "Twitter",
     icon: Twitter,
     color: "text-blue-500",
     placeholder: "Enter your Twitter handle (without @)",
   },
   {
-    id: "4a267045-dbfc-432c-96a5-17a9da542248",
+    id: "ddb82018-1361-428d-bcde-b0e4517ed28d",
     name: "LinkedIn",
     icon: Linkedin,
     color: "text-blue-700",
     placeholder: "Enter your LinkedIn profile/company name",
   },
   {
-    id: "da6acd0d-7b5e-4aec-8d0c-9126220a8341",
+    id: "348977d6-18c5-4ba8-bbf6-3774d7ed6a30",
     name: "Website",
     icon: Globe,
     color: "text-green-600",
     placeholder: "Enter your website domain",
   },
   {
-    id: "8e7857f1-d153-4470-bd6a-cf4ad79bb8fe",
+    id: "06ccac39-70bc-43ae-bfca-37590669e9e0",
     name: "Google Maps",
     icon: MapPin,
     color: "text-red-500",
     placeholder: "Enter your business name on Google Maps",
   },
   {
-    id: "4ee3988d-70a4-4dd4-8708-5441de698a38",
+    id: "feebc6ba-ea7f-4414-a111-fa15962eb03e",
     name: "Google Play Store",
     icon: Smartphone,
     color: "text-green-500",
@@ -519,23 +519,6 @@ export default function SelfAnalytics() {
     return undefined;
   };
 
-  // Prepare analytics data (adapted for competitor-specific queries when userCompanyId exists)
-  const metricsData = {
-    totalMentions: getCardData<MetricCardResponse>("total-mentions", "number"),
-    negativeSentiment: getCardData<MetricCardResponse>(
-      "negative-sentiment-percentage",
-      "number"
-    ),
-    recurringComplaints: getCardData<MetricCardResponse>(
-      "recurring-complaints",
-      "number"
-    ),
-    alternativesMentioned: getCardData<MetricCardResponse>(
-      "alternatives-mentioned",
-      "number"
-    ),
-  };
-
   // Handle both regular and competitor-specific trend data
   const complaintTrend = userCompanyId
     ? getCardData<TrendCardResponse>("competitor-complaint-trend", "line")
@@ -818,8 +801,6 @@ export default function SelfAnalytics() {
           </div>
         ) : (
           <>
-            <SummaryMetrics metrics={metricsData} />
-
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
               <div className="lg:col-span-2">
                 <SentimentChart
