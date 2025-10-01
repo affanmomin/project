@@ -92,8 +92,8 @@ export default function Competitors() {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Total Mentions</TableHead>
-              <TableHead>Negative Sentiment</TableHead>
+              <TableHead>Total Complaints</TableHead>
+              <TableHead>Total Features</TableHead>
               <TableHead>Total Leads</TableHead>
               <TableHead>Complaint Clusters</TableHead>
               <TableHead>Alternatives</TableHead>

@@ -521,13 +521,13 @@ export default function SelfAnalytics() {
 
   // Prepare analytics data (adapted for competitor-specific queries when userCompanyId exists)
   const metricsData = {
-    totalMentions: getCardData<MetricCardResponse>("total-mentions", "number"),
+    totalMentions: getCardData<MetricCardResponse>("total-complaints", "number"),
     negativeSentiment: getCardData<MetricCardResponse>(
-      "negative-sentiment-percentage",
+      "total-features-identified",
       "number"
     ),
     recurringComplaints: getCardData<MetricCardResponse>(
-      "recurring-complaints",
+      "leads-identified",
       "number"
     ),
     alternativesMentioned: getCardData<MetricCardResponse>(
