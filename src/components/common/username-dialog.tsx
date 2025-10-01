@@ -51,6 +51,88 @@ export function UsernameDialog({
     // Basic validation based on platform
     const trimmedUsername = username.trim();
 
+    // Strict website URL validation
+    if (platform.toLowerCase() === "website") {
+      // Check if URL starts with protocol
+      if (!trimmedUsername.startsWith('http://') && !trimmedUsername.startsWith('https://')) {
+        setError("Website URL must start with http:// or https://");
+        return;
+      }
+
+      try {
+        const url = new URL(trimmedUsername);
+        
+        // Validate protocol
+        if (!['http:', 'https:'].includes(url.protocol)) {
+          setError("Website URL must use http:// or https:// protocol");
+          return;
+        }
+        
+        // Validate hostname exists
+        if (!url.hostname) {
+          setError("Website URL must include a valid hostname");
+          return;
+        }
+        
+        // Special case for localhost (development)
+        if (url.hostname === 'localhost') {
+          // Allow localhost with optional port
+          if (url.port && !/^\d{1,5}$/.test(url.port)) {
+            setError("Invalid port number in localhost URL");
+            return;
+          }
+        } else {
+          // For non-localhost URLs, enforce strict domain validation
+          const hostname = url.hostname;
+          
+          // Check for valid domain format
+          if (!hostname.includes('.')) {
+            setError("Website URL must include a valid domain with extension (e.g., .com, .org)");
+            return;
+          }
+          
+          // Validate domain extension (at least 2 characters)
+          if (!/\.[a-zA-Z]{2,}$/.test(hostname)) {
+            setError("Website URL must have a valid domain extension (e.g., .com, .org, .net)");
+            return;
+          }
+          
+          // Check for invalid characters in hostname
+          if (!/^[a-zA-Z0-9.-]+$/.test(hostname)) {
+            setError("Website URL contains invalid characters in domain");
+            return;
+          }
+          
+          // Ensure no double dots or invalid patterns
+          if (hostname.includes('..') || hostname.startsWith('.') || hostname.endsWith('.')) {
+            setError("Website URL has invalid domain format");
+            return;
+          }
+          
+          // Check for minimum domain length
+          if (hostname.length < 4) { // Minimum: a.co
+            setError("Website URL domain is too short");
+            return;
+          }
+        }
+        
+        // Additional URL structure validation
+        if (url.pathname === '' || url.pathname === '/') {
+          // This is fine - root path
+        } else {
+          // Validate path characters
+          if (!/^[a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,;=%]*$/.test(url.pathname + url.search + url.hash)) {
+            setError("Website URL contains invalid characters in path");
+            return;
+          }
+        }
+        
+      } catch (error) {
+        setError("Please enter a valid website URL (e.g., https://example.com)");
+        return;
+      }
+    }
+
     setError("");
     onConfirm(trimmedUsername);
   };
@@ -87,7 +169,7 @@ export function UsernameDialog({
   const getDescription = () => {
     switch (platform.toLowerCase()) {
       case "website":
-        return "Enter the website URL you want to monitor (must include http:// or https://)";
+        return "Enter the complete website URL including protocol (e.g., https://www.example.com). Invalid URLs will cause system errors.";
       case "twitter":
         return "Enter the Twitter handle you want to monitor (e.g. tesla)";
       case "reddit":
