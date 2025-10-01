@@ -28,13 +28,15 @@ import {
   Smartphone,
   Check,
   X,
+  AlertCircle,
+  TrendingUp,
+  Users,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/api";
 
 // Import all the dashboard components we need to reuse
-import { SummaryMetrics } from "@/components/dashboard/summary-metrics";
 import { TopComplaints } from "@/components/dashboard/top-complaints";
 import { TopFeatures } from "@/components/dashboard/top-features";
 import { TopAlternatives } from "@/components/dashboard/top-alternatives";
@@ -46,10 +48,43 @@ import type {
   FeatureCardResponse,
   AlternativeCardResponse,
   LeadCardResponse,
-  MetricCardResponse,
   TrendCardResponse,
   MentionPoint,
 } from "@/types";
+
+// Enhanced NoData component with better UI
+const NoData = ({ 
+  message = "No data available", 
+  icon: Icon = AlertCircle,
+  description,
+  height = "200px" 
+}: { 
+  message?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  description?: string;
+  height?: string;
+}) => (
+  <div 
+    className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50/50 dark:border-gray-700 dark:bg-gray-800/50" 
+    style={{ height }}
+  >
+    <div className="flex flex-col items-center space-y-3 text-center">
+      <div className="rounded-full bg-gray-100 p-3 dark:bg-gray-800">
+        <Icon className="h-6 w-6 text-gray-400" />
+      </div>
+      <div className="space-y-1">
+        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+          {message}
+        </p>
+        {description && (
+          <p className="text-xs text-gray-500 dark:text-gray-400 max-w-xs">
+            {description}
+          </p>
+        )}
+      </div>
+    </div>
+  </div>
+);
 
 // Platform configuration
 const PLATFORM_CONFIG = [
@@ -519,6 +554,18 @@ export default function SelfAnalytics() {
     return undefined;
   };
 
+  // Helper function to check if card has data
+  const hasCardData = (card: CardResponse | undefined): boolean => {
+    if (!card || !card.data) return false;
+    
+    if (Array.isArray(card.data)) {
+      return card.data.length > 0;
+    }
+    
+    // For number type cards, check if value exists and is not null/undefined
+    return card.data !== null && card.data !== undefined;
+  };
+
   // Handle both regular and competitor-specific trend data
   const complaintTrend = userCompanyId
     ? getCardData<TrendCardResponse>("competitor-complaint-trend", "line")
@@ -803,19 +850,36 @@ export default function SelfAnalytics() {
           <>
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
               <div className="lg:col-span-2">
-                <SentimentChart
-                  data={sentimentSeries}
-                  title={complaintTrend?.title || "Complaint Trend"}
-                  description={
-                    complaintTrend?.description || "Complaint trend over time"
-                  }
-                />
+                {hasCardData(complaintTrend) ? (
+                  <SentimentChart
+                    data={sentimentSeries}
+                    title={complaintTrend?.title || "Complaint Trend"}
+                    description={
+                      complaintTrend?.description || "Complaint trend over time"
+                    }
+                  />
+                ) : (
+                  <NoData 
+                    message="No mention trends available" 
+                    icon={TrendingUp}
+                    description="Mention trends will appear here once data is collected from your connected platforms."
+                  />
+                )}
               </div>
               <div>
                 {(() => {
                   const featuresData = getFeaturesData();
                   console.log("Features data:", featuresData);
-                  return <TopFeatures data={featuresData} />;
+                  return hasCardData(featuresData) ? (
+                    <TopFeatures data={featuresData} />
+                  ) : (
+                    <NoData 
+                      message="No features data available" 
+                      icon={BarChart3}
+                      description="Top features mentioned about your brand will be displayed here."
+                      height="300px"
+                    />
+                  );
                 })()}
               </div>
             </div>
@@ -825,21 +889,48 @@ export default function SelfAnalytics() {
                 {(() => {
                   const complaintsData = getComplaintsData();
                   console.log("Complaints data:", complaintsData);
-                  return <TopComplaints data={complaintsData} />;
+                  return hasCardData(complaintsData) ? (
+                    <TopComplaints data={complaintsData} />
+                  ) : (
+                    <NoData 
+                      message="No complaints data available" 
+                      icon={AlertCircle}
+                      description="Customer complaints and feedback about your brand will appear here."
+                      height="300px"
+                    />
+                  );
                 })()}
               </div>
               <div>
                 {(() => {
                   const alternativesData = getAlternativesData();
                   console.log("Alternatives data:", alternativesData);
-                  return <TopAlternatives data={alternativesData} />;
+                  return hasCardData(alternativesData) ? (
+                    <TopAlternatives data={alternativesData} />
+                  ) : (
+                    <NoData 
+                      message="No alternatives data available" 
+                      icon={BarChart3}
+                      description="Alternative brands mentioned by users will be shown here."
+                      height="300px"
+                    />
+                  );
                 })()}
               </div>
               <div>
                 {(() => {
                   const leadsData = getLeadsData();
                   console.log("Leads data:", leadsData);
-                  return <RecentLeads data={leadsData} />;
+                  return hasCardData(leadsData) ? (
+                    <RecentLeads data={leadsData} />
+                  ) : (
+                    <NoData 
+                      message="No leads data available" 
+                      icon={Users}
+                      description="Potential customers and leads will be listed here once identified."
+                      height="300px"
+                    />
+                  );
                 })()}
               </div>
             </div>

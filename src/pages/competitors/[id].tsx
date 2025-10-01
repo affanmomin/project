@@ -18,6 +18,11 @@ import {
   ExternalLink,
   Hash,
   FileText,
+  AlertCircle,
+  BarChart3,
+  TrendingUp,
+  Users,
+  Database,
 } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,6 +35,40 @@ import type {
   TrendCardResponse,
   MentionPoint,
 } from "@/types";
+
+// Enhanced NoData component with better UI
+const NoData = ({ 
+  message = "No data available", 
+  icon: Icon = AlertCircle,
+  description,
+  height = "200px" 
+}: { 
+  message?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  description?: string;
+  height?: string;
+}) => (
+  <div 
+    className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50/50 dark:border-gray-700 dark:bg-gray-800/50" 
+    style={{ height }}
+  >
+    <div className="flex flex-col items-center space-y-3 text-center">
+      <div className="rounded-full bg-gray-100 p-3 dark:bg-gray-800">
+        <Icon className="h-6 w-6 text-gray-400" />
+      </div>
+      <div className="space-y-1">
+        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+          {message}
+        </p>
+        {description && (
+          <p className="text-xs text-gray-500 dark:text-gray-400 max-w-xs">
+            {description}
+          </p>
+        )}
+      </div>
+    </div>
+  </div>
+);
 
 export default function CompetitorDetails() {
   const { id } = useParams<{ id: string }>();
@@ -116,6 +155,18 @@ export default function CompetitorDetails() {
     return undefined;
   };
 
+  // Helper function to check if card has data
+  const hasCardData = (card: CardResponse | undefined): boolean => {
+    if (!card || !card.data) return false;
+    
+    if (Array.isArray(card.data)) {
+      return card.data.length > 0;
+    }
+    
+    // For number type cards, check if value exists and is not null/undefined
+    return card.data !== null && card.data !== undefined;
+  };
+
   // Get metrics data from API
   // Prepare trend data for SentimentChart
   const complaintTrend = getCardData<TrendCardResponse>(
@@ -195,11 +246,11 @@ export default function CompetitorDetails() {
       </div>
 
       {/* Data Sources Section */}
-      {competitorDetails?.sources && competitorDetails.sources.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-2xl font-semibold text-foreground">
-            Data Sources
-          </h2>
+      <div className="space-y-4">
+        <h2 className="text-2xl font-semibold text-foreground">
+          Data Sources
+        </h2>
+        {competitorDetails?.sources && competitorDetails.sources.length > 0 ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {competitorDetails.sources.map((source: any, index: number) => (
               <Card key={source.competitor_source_id || index} className="p-6">
@@ -238,8 +289,15 @@ export default function CompetitorDetails() {
               </Card>
             ))}
           </div>
-        </div>
-      )}
+        ) : (
+          <NoData 
+            message="No data sources configured" 
+            icon={Database}
+            description="Configure data sources like social media accounts, review platforms, or websites to start collecting competitor insights."
+            height="160px"
+          />
+        )}
+      </div>
 
       {/* Analytics Overview */}
       <div className="space-y-6">
@@ -250,44 +308,98 @@ export default function CompetitorDetails() {
         {/* Main Chart and Features */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <SentimentChart
-              data={sentimentSeries}
-              title={complaintTrend?.title || "Mentions Over Time"}
-              description={
-                complaintTrend?.description || "Mentions and sentiment trends"
-              }
-            />
+            {hasCardData(complaintTrend) ? (
+              <SentimentChart
+                data={sentimentSeries}
+                title={complaintTrend?.title || "Mentions Over Time"}
+                description={
+                  complaintTrend?.description || "Mentions and sentiment trends"
+                }
+              />
+            ) : (
+              <NoData 
+                message="No mentions trend data available" 
+                icon={TrendingUp}
+                description="Mention trends will appear here once data is collected from configured sources."
+              />
+            )}
           </div>
           <div className="space-y-6">
-            <TopFeatures
-              data={getCardData<FeatureCardResponse>(
+            {(() => {
+              const featuresData = getCardData<FeatureCardResponse>(
                 "competitor-top-features-short",
                 "bar"
-              )}
-            />
+              );
+              return hasCardData(featuresData) ? (
+                <TopFeatures data={featuresData} />
+              ) : (
+                <NoData 
+                  message="No features data available" 
+                  icon={BarChart3}
+                  description="Feature mentions and analysis will be displayed here."
+                  height="300px"
+                />
+              );
+            })()}
           </div>
         </div>
 
         {/* Complaints, Alternatives, and Leads */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <TopComplaints
-            data={getCardData<ComplaintCardResponse>(
-              "competitor-top-complaints-short",
-              "bar"
-            )}
-          />
-          <TopAlternatives
-            data={getCardData<AlternativeCardResponse>(
-              "competitor-top-alternatives-short",
-              "bar"
-            )}
-          />
-          <RecentLeads
-            data={getCardData<LeadCardResponse>(
-              "competitor-recent-switching-leads",
-              "table"
-            )}
-          />
+          <div>
+            {(() => {
+              const complaintsData = getCardData<ComplaintCardResponse>(
+                "competitor-top-complaints-short",
+                "bar"
+              );
+              return hasCardData(complaintsData) ? (
+                <TopComplaints data={complaintsData} />
+              ) : (
+                <NoData 
+                  message="No complaints data available" 
+                  icon={AlertCircle}
+                  description="Customer complaints and feedback will appear here."
+                  height="300px"
+                />
+              );
+            })()}
+          </div>
+          <div>
+            {(() => {
+              const alternativesData = getCardData<AlternativeCardResponse>(
+                "competitor-top-alternatives-short",
+                "bar"
+              );
+              return hasCardData(alternativesData) ? (
+                <TopAlternatives data={alternativesData} />
+              ) : (
+                <NoData 
+                  message="No alternatives data available" 
+                  icon={BarChart3}
+                  description="Alternative products mentioned by users will be shown here."
+                  height="300px"
+                />
+              );
+            })()}
+          </div>
+          <div>
+            {(() => {
+              const leadsData = getCardData<LeadCardResponse>(
+                "competitor-recent-switching-leads",
+                "table"
+              );
+              return hasCardData(leadsData) ? (
+                <RecentLeads data={leadsData} />
+              ) : (
+                <NoData 
+                  message="No leads data available" 
+                  icon={Users}
+                  description="Recent switching leads and potential customers will be listed here."
+                  height="300px"
+                />
+              );
+            })()}
+          </div>
         </div>
       </div>
     </div>
