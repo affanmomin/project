@@ -9,24 +9,11 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Filter, Search } from "lucide-react";
+import { ExternalLink, Download } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/common/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { ComplaintDataPoint } from "@/types";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -137,6 +124,77 @@ export default function Complaints() {
     });
   };
 
+  // Export complaints to CSV
+  const exportToCSV = () => {
+    try {
+      // Use filtered complaints for export
+      const dataToExport = filteredComplaints.length > 0 ? filteredComplaints : complaints;
+      
+      if (dataToExport.length === 0) {
+        toast({
+          title: "No Data to Export",
+          description: "There are no complaints available to export.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // CSV Headers
+      const headers = [
+        "Complaint",
+        "Category", 
+        "Value",
+        "Severity"
+      ];
+
+      // Convert data to CSV format
+      const csvContent = [
+        // Add headers
+        headers.join(","),
+        // Add data rows
+        ...dataToExport.map(complaint => {
+          const numValue = parseInt(complaint.value, 10);
+          let severity = "Low";
+          if (numValue >= 100) severity = "High";
+          else if (numValue >= 50) severity = "Medium";
+
+          return [
+            `"${(complaint.name || complaint.label).replace(/"/g, '""')}"`, // Escape quotes
+            `"${complaint.label.replace(/"/g, '""')}"`,
+            complaint.value,
+            severity
+          ].join(",");
+        })
+      ].join("\n");
+
+      // Create and download file
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      
+      if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `complaints_export_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast({
+          title: "Export Successful",
+          description: `${dataToExport.length} complaints exported to CSV successfully.`,
+        });
+      }
+    } catch (error) {
+      console.error("Export error:", error);
+      toast({
+        title: "Export Failed",
+        description: "An error occurred while exporting the data.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (error) {
     return (
       <div className="flex h-[200px] items-center justify-center">
@@ -170,11 +228,16 @@ export default function Complaints() {
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Filter className="mr-2 h-4 w-4" />
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={exportToCSV}
+            disabled={isLoading}
+          >
+            <Download className="mr-2 h-4 w-4" />
             Export CSV
           </Button>
-          <Button
+          {/* <Button
             variant="default"
             size="sm"
             onClick={handleTestSearch}
@@ -182,7 +245,7 @@ export default function Complaints() {
           >
             <Search className="mr-2 h-4 w-4" />
             {isSearching ? "Searching..." : "Test Search API"}
-          </Button>
+          </Button> */}
         </div>
       </div>
 

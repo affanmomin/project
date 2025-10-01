@@ -154,7 +154,7 @@ export default function Features() {
             <Filter className="mr-2 h-4 w-4" />
             Export CSV
           </Button>
-          <Button
+          {/* <Button
             variant="default"
             size="sm"
             onClick={handleTestSearch}
@@ -162,7 +162,7 @@ export default function Features() {
           >
             <Search className="mr-2 h-4 w-4" />
             {isSearching ? "Searching..." : "Test Search API"}
-          </Button>
+          </Button> */}
         </div>
       </div>
 

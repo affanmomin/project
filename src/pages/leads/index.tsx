@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Filter, Search } from "lucide-react";
+import { ExternalLink, Search, Download } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -166,6 +166,76 @@ export default function Leads() {
     }
   };
 
+  // Export leads to CSV
+  const exportToCSV = () => {
+    try {
+      // Use filtered leads for export
+      const dataToExport = filteredLeads.length > 0 ? filteredLeads : leads;
+      
+      if (dataToExport.length === 0) {
+        toast({
+          title: "No Data to Export",
+          description: "There are no leads available to export.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // CSV Headers
+      const headers = [
+        "Platform",
+        "Username", 
+        "Excerpt",
+        "Reason",
+        "Date",
+        "Status"
+      ];
+
+      // Convert data to CSV format
+      const csvContent = [
+        // Add headers
+        headers.join(","),
+        // Add data rows
+        ...dataToExport.map(lead => {
+          return [
+            `"${lead.platform.replace(/"/g, '""')}"`, // Escape quotes
+            `"${lead.username.replace(/"/g, '""')}"`,
+            `"${lead.excerpt.replace(/"/g, '""')}"`,
+            `"${lead.reason.replace(/"/g, '""')}"`,
+            `"${formatDate(lead.date)}"`,
+            `"${lead.status || 'New'}"`
+          ].join(",");
+        })
+      ].join("\n");
+
+      // Create and download file
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      
+      if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `leads_export_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast({
+          title: "Export Successful",
+          description: `${dataToExport.length} leads exported to CSV successfully.`,
+        });
+      }
+    } catch (error) {
+      console.error("Export error:", error);
+      toast({
+        title: "Export Failed",
+        description: "An error occurred while exporting the data.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (error) {
     return (
       <div className="flex h-[200px] items-center justify-center">
@@ -226,19 +296,16 @@ export default function Leads() {
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <Filter className="mr-2 h-4 w-4" />
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={exportToCSV}
+            disabled={isLoading}
+          >
+            <Download className="mr-2 h-4 w-4" />
             Export CSV
           </Button>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={handleTestSearch}
-            disabled={isSearching}
-          >
-            <Search className="mr-2 h-4 w-4" />
-            {isSearching ? "Searching..." : "Test Search API"}
-          </Button>
+    
         </div>
       </div>
 
