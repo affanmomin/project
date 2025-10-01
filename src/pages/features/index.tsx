@@ -89,7 +89,8 @@ export default function Features() {
     // Text search
     const matchesSearch =
       feature.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (feature.name && feature.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      feature.feature_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      feature.competitor_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       feature.value.toLowerCase().includes(searchQuery.toLowerCase());
 
     // Category filter
@@ -99,17 +100,8 @@ export default function Features() {
     return matchesSearch && matchesCategory;
   });
 
-  // Get priority badge based on value (assuming higher values are more important)
-  const getPriorityBadge = (value: string) => {
-    const numValue = parseInt(value, 10);
-    if (numValue >= 100) {
-      return <Badge variant="destructive">High Priority</Badge>;
-    } else if (numValue >= 50) {
-      return <Badge variant="default">Medium Priority</Badge>;
-    } else {
-      return <Badge variant="secondary">Low Priority</Badge>;
-    }
-  };
+  // Get unique competitors for additional filtering if needed
+  const competitors = [...new Set(features.map((feature) => feature.competitor_name))];
 
   if (error) {
     return (
@@ -133,7 +125,7 @@ export default function Features() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center flex-1">
           <div className="relative w-full sm:w-64 lg:w-96">
             <Input
-              placeholder="Search features..."
+              placeholder="Search features, competitors..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full"
@@ -178,19 +170,28 @@ export default function Features() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Feature Name</TableHead>
+              <TableHead>Feature Description</TableHead>
+              <TableHead>Competitor</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Mentions</TableHead>
-              <TableHead>Priority</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredFeatures.length > 0 ? (
               filteredFeatures.map((feature, index) => (
-                <TableRow key={`${feature.label}-${index}`}>
+                <TableRow key={`${feature.feature_name}-${index}`}>
                   <TableCell className="font-medium">
-                    {feature.name || "Unnamed Feature"}
+                    <div className="max-w-md">
+                      <p className="text-sm leading-relaxed">
+                        {feature.feature_name}
+                      </p>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="default" className="max-w-xs truncate">
+                      {feature.competitor_name}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">{feature.label}</Badge>
@@ -198,7 +199,6 @@ export default function Features() {
                   <TableCell>
                     <span className="font-semibold">{feature.value}</span>
                   </TableCell>
-                  <TableCell>{getPriorityBadge(feature.value)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end space-x-2">
                       <Button variant="outline" size="sm">

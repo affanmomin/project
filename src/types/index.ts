@@ -15,7 +15,8 @@ export interface ComplaintDataPoint {
 }
 
 export interface FeatureDataPoint {
-  name: string | null;
+  feature_name: string;
+  competitor_name: string;
   label: string;
   value: string;
 }
