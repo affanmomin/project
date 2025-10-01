@@ -133,6 +133,47 @@ export function UsernameDialog({
       }
     }
 
+    // Strict Google Play Store URL validation
+    if (platform.toLowerCase() === "google playstore") {
+      if (!trimmedUsername.startsWith('https://play.google.com/store/apps/details?id=')) {
+        setError("Google Play Store URL must start with https://play.google.com/store/apps/details?id=");
+        return;
+      }
+
+      try {
+        const url = new URL(trimmedUsername);
+        
+        // Validate it's exactly play.google.com
+        if (url.hostname !== 'play.google.com') {
+          setError("Google Play Store URL must be from play.google.com");
+          return;
+        }
+        
+        // Validate path
+        if (!url.pathname.startsWith('/store/apps/details')) {
+          setError("Invalid Google Play Store URL path");
+          return;
+        }
+        
+        // Validate app ID parameter exists
+        const appId = url.searchParams.get('id');
+        if (!appId) {
+          setError("Google Play Store URL must include app ID parameter (id=)");
+          return;
+        }
+        
+        // Validate app ID format (basic package name validation)
+        if (!/^[a-zA-Z][a-zA-Z0-9_]*(?:\.[a-zA-Z][a-zA-Z0-9_]*)*$/.test(appId)) {
+          setError("Invalid app package ID format in Google Play Store URL");
+          return;
+        }
+        
+      } catch (error) {
+        setError("Please enter a valid Google Play Store URL");
+        return;
+      }
+    }
+
     setError("");
     onConfirm(trimmedUsername);
   };
@@ -152,7 +193,7 @@ export function UsernameDialog({
       case "reddit":
         return "Username";
       case "google playstore":
-        return "App Name";
+        return "https://play.google.com/store/apps/details?id=com.example.app";
       case "google maps":
         return "Business Name";
       case "g2":
@@ -181,7 +222,7 @@ export function UsernameDialog({
       case "producthunt":
         return "Enter the product name as it appears on Product Hunt";
       case "google playstore":
-        return "Enter the app name as it appears on Google Play Store";
+        return "Enter the complete Google Play Store URL (e.g., https://play.google.com/store/apps/details?id=com.example.app). Find this by visiting the app page and copying the URL.";
       case "google maps":
         return "Enter the business name as it appears on Google Maps";
       default:
@@ -206,6 +247,8 @@ export function UsernameDialog({
               <Label htmlFor="username" className="text-sm font-medium">
                 {platform.toLowerCase() === "website"
                   ? "Website URL"
+                  : platform.toLowerCase() === "google playstore"
+                  ? "Google Play Store URL"
                   : `${platform.charAt(0).toUpperCase() + platform.slice(1).toLowerCase()}`}
               </Label>
               <Input
