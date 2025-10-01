@@ -166,33 +166,7 @@ export default function Complaints() {
             />
           </div>
 
-          <div className="flex items-center gap-2">
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={severityFilter} onValueChange={setSeverityFilter}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Severity" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Severities</SelectItem>
-                <SelectItem value="high">High Severity</SelectItem>
-                <SelectItem value="medium">Medium Severity</SelectItem>
-                <SelectItem value="low">Low Severity</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        
         </div>
 
         <div className="flex gap-2">
@@ -218,8 +192,6 @@ export default function Complaints() {
             <TableRow>
               <TableHead>Complaint</TableHead>
               <TableHead>Category</TableHead>
-              <TableHead>Mentions</TableHead>
-              <TableHead>Severity</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -233,41 +205,13 @@ export default function Complaints() {
                   <TableCell>
                     <Badge variant="outline">{complaint.label}</Badge>
                   </TableCell>
-                  <TableCell>
+                  {/* <TableCell>
                     <span className="font-semibold">{complaint.value}</span>
-                  </TableCell>
-                  <TableCell>{getSeverityBadge(complaint.value)}</TableCell>
+                  </TableCell> */}
+                  {/* <TableCell>{getSeverityBadge(complaint.value)}</TableCell> */}
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end space-x-2">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            Update Status
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => handleStatusChange("open")}
-                          >
-                            Open
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleStatusChange("investigating")}
-                          >
-                            Investigating
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleStatusChange("resolved")}
-                          >
-                            Resolved
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleStatusChange("dismissed")}
-                          >
-                            Dismissed
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                
 
                       <Button variant="ghost" size="icon" asChild>
                         <a href="#" target="_blank" rel="noopener noreferrer">
