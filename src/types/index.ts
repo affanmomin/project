@@ -1,5 +1,6 @@
 // ... (existing types)
 
+
 export interface MetricDataPoint {
   current_value?: string;
   previous_value?: string;
@@ -15,6 +16,7 @@ export interface ComplaintDataPoint {
 }
 
 export interface FeatureDataPoint {
+  feature_type: string;
   feature_name: string;
   competitor_name: string;
   label: string;

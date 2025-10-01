@@ -132,7 +132,7 @@ export default function Features() {
             />
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger className="w-[150px]">
                 <SelectValue placeholder="Category" />
@@ -146,7 +146,7 @@ export default function Features() {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </div> */}
         </div>
 
         <div className="flex gap-2">
@@ -172,8 +172,7 @@ export default function Features() {
             <TableRow>
               <TableHead>Feature Description</TableHead>
               <TableHead>Competitor</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Mentions</TableHead>
+              <TableHead>Feature Type</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -194,16 +193,13 @@ export default function Features() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{feature.label}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <span className="font-semibold">{feature.value}</span>
+                    <Badge variant="outline">{feature.feature_type}</Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end space-x-2">
-                      <Button variant="outline" size="sm">
+                      {/* <Button variant="outline" size="sm">
                         View Details
-                      </Button>
+                      </Button> */}
 
                       <Button variant="ghost" size="icon" asChild>
                         <a href="#" target="_blank" rel="noopener noreferrer">
@@ -217,7 +213,7 @@ export default function Features() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-6">
+                <TableCell colSpan={4} className="text-center py-6">
                   No features found.
                 </TableCell>
               </TableRow>

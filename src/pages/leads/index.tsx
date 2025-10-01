@@ -128,15 +128,42 @@ export default function Leads() {
   };
 
   // Handle status change
-  const handleStatusChange = (
+  const handleStatusChange = async (
     leadId: string,
     newStatus: "new" | "contacted" | "responded" | "ignored"
   ) => {
-    setLeads((prevLeads) =>
-      prevLeads.map((lead) =>
-        lead.id === leadId ? { ...lead, status: newStatus } : lead
-      )
-    );
+    try {
+      console.log("Updating status for lead:", leadId, "to", newStatus,"user:",userInfo.user?.id);
+      // Make API call to update status
+      await apiClient.put("/api/leads/status", {
+        user_id: userInfo.user?.id,
+        lead_id: leadId,
+        status: newStatus,
+      });
+
+      // Update local state on successful API call
+      setLeads((prevLeads) =>
+        prevLeads.map((lead) =>
+          lead.id === leadId ? { ...lead, status: newStatus } : lead
+        )
+      );
+
+      toast({
+        title: "Status Updated",
+        description: `Lead status changed to ${newStatus}`,
+      });
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to update lead status";
+      toast({
+        title: "Update Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      console.error("Status Update Error:", error);
+    }
   };
 
   if (error) {
