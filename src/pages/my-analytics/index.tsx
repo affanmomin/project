@@ -863,6 +863,7 @@ export default function SelfAnalytics() {
                     message="No mention trends available" 
                     icon={TrendingUp}
                     description="Mention trends will appear here once data is collected from your connected platforms."
+                    height="400px"
                   />
                 )}
               </div>
