@@ -71,9 +71,9 @@ api.interceptors.response.use(
 
 // API methods
 export const DASHBOARD_QUERIES = [
-  "total-mentions",
-  "negative-sentiment-percentage",
-  "recurring-complaints",
+  "total-complaints",
+  "total-features-identified",
+  "leads-identified",
   "alternatives-mentioned",
   "top-complaints-short",
   "top-features-short",

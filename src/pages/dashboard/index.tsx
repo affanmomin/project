@@ -79,13 +79,13 @@ export default function Dashboard() {
 
   // Get metrics data
   const metricsData = {
-    totalMentions: getCardData<MetricCardResponse>("total-mentions", "number"),
+    totalMentions: getCardData<MetricCardResponse>("total-complaints", "number"),
     negativeSentiment: getCardData<MetricCardResponse>(
-      "negative-sentiment-percentage",
+      "total-features-identified",
       "number"
     ),
     recurringComplaints: getCardData<MetricCardResponse>(
-      "recurring-complaints",
+      "leads-identified",
       "number"
     ),
     alternativesMentioned: getCardData<MetricCardResponse>(

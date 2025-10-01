@@ -27,7 +27,7 @@ export function SummaryMetrics({ metrics, className }: SummaryMetricsProps) {
     <div className={className}>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricsCard
-          title="Total Mentions"
+          title="Total Complaints"
           value={getMetricValue(metrics.totalMentions)}
           icon={MessageSquare}
           change={getMetricChange(metrics.totalMentions)}
@@ -39,8 +39,8 @@ export function SummaryMetrics({ metrics, className }: SummaryMetricsProps) {
           description="vs previous period"
         />
         <MetricsCard
-          title="Negative Sentiment"
-          value={`${getMetricValue(metrics.negativeSentiment)}%`}
+          title="Total Features"
+          value={getMetricValue(metrics.negativeSentiment)}
           icon={TrendingDown}
           change={getMetricChange(metrics.negativeSentiment)}
           trend={
@@ -51,7 +51,7 @@ export function SummaryMetrics({ metrics, className }: SummaryMetricsProps) {
           description="vs previous period"
         />
         <MetricsCard
-          title="Recurring Complaints"
+          title="Leads Identified"
           value={getMetricValue(metrics.recurringComplaints)}
           icon={BarChart3}
           change={getMetricChange(metrics.recurringComplaints)}
